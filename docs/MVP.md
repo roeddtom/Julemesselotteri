@@ -25,8 +25,7 @@
 
 C# / .NET 10 LTS med WPF, uten eksterne kjøretidstjenester. Selvstendig,
 portabel Windows-publisering. Testbar kjernelogikk uavhengig av skjermene.
-Teknologivalget er en implementasjonsbeslutning basert på Windows/offline-kravene;
-brukeren var ikke tilgjengelig for siste plangodkjenning.
+Teknologivalget er basert på Windows/offline-kravene.
 
 1. **Trekkmotor og gjenoppretting:** regler, rettferdig utvalg, atomisk tilstand,
    lesbare logger og automatiserte tester.
@@ -51,5 +50,31 @@ runde. Gevinstmengden kan ikke overstige tilgjengelige lodd. Øvre grense er
 ## Fremdrift
 
 - Iterasjon 1: implementert trekkmotor, transaksjonell tilstand og TXT-logger.
-- Iterasjon 2: planlagt.
-- Iterasjon 3: planlagt.
+- Iterasjon 2: operatørvindu med automatisk lagring, låst rundeoppsett, skjermvalg,
+  gjenoppretting og rundekontroller. Enkel publikumsskjerm uten animasjon.
+- Iterasjon 3: under arbeid etter at brukeren eksplisitt godkjente animasjon,
+  lyd, dokumentasjon og avgrensede commits.
+- En selvstendig Windows x64-forhåndsversjon er publisert med profilen `Portable`
+  i `artifacts\win-x64`.
+  Dette er ikke den ferdige MVP-en: den viser vinnertall direkte, uten tromler,
+  bok-først-sekvens, ventetid eller lyd. Lyd- og tidsinnstillinger er kun lagret
+  oppsett foreløpig. `Vis nå` kan vise en lagret trekning etter omstart.
+
+## Verifikasjon og versjonskontroll
+
+Trekkmotoren har 29 automatiserte testtilfeller. En separat WPF-skjermtest bruker
+midlertidige data og åpner ekte vinduer for å kontrollere validering, omvendt
+gevinstrekkefølge, unike nummer, rundebytte, lukking av publikumsvindu og omstart.
+Skjermtesten er også kjørt selvstendig med de nøyaktige app-/kjernedll-ene fra
+den portable publiseringen. Publiseringsmappen inneholder .NET- og WPF-runtime.
+Formateringskontroll og `git diff --check` er godkjent.
+
+En utilgjengelig, allerede konfigurert pakkekilde ga feil ved første publisering.
+Publiseringen lyktes med `-p:RestoreIgnoreFailedSources=true`, uten endring av
+pakkekildene. Sårbarhetsoppslag rapporterte fortsatt NU1900-advarsler fra den
+utilgjengelige kilden; disse er ikke applikasjonsfeil eller fullført
+avhengighetssikkerhetskontroll.
+
+Iterasjon 1 er committet som `29cbd5a` (`feat(core): add durable lottery engine and draw rules`).
+Første commit-forsøk etter iterasjon 2 ble avslått. Brukeren har deretter
+eksplisitt godkjent videre endringer og avgrensede conventional commits.

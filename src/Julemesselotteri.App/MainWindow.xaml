@@ -1,0 +1,154 @@
+<Window x:Class="Julemesselotteri.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Julemesselotteri · Operatør" Width="1220" Height="850"
+        MinWidth="960" MinHeight="680" WindowStartupLocation="CenterScreen"
+        Closing="Window_Closing">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <DockPanel Margin="0,0,0,20">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="Åpne logger" Click="OpenLogs_Click"/>
+                <Button x:Name="NewEventButton" Content="Nytt arrangement" Click="NewEvent_Click"/>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Julemesselotteri" FontSize="30" FontWeight="SemiBold"/>
+                <TextBlock Text="Gode gevinster. Store øyeblikk." Style="{StaticResource Caption}"/>
+            </StackPanel>
+        </DockPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.05*"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TabControl x:Name="SetupTabs" Background="White" BorderBrush="#DDE4DC">
+                <TabItem Header="Gevinster og lodd">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="18">
+                            <StackPanel x:Name="LotterySetup">
+                                <TextBlock Text="Hjertelodd" FontSize="19" FontWeight="SemiBold"/>
+                                <TextBlock Text="Én gevinst per linje. Hovedgevinst øverst — trekkes sist." Style="{StaticResource Caption}"/>
+                                <TextBox x:Name="HeartPrizesBox" AutomationProperties.AutomationId="HeartPrizes"
+                                         AcceptsReturn="True" Height="120" VerticalScrollBarVisibility="Auto"
+                                         VerticalContentAlignment="Top" TextChanged="SettingsChanged"/>
+                                <TextBlock Text="Boklodd" FontSize="19" FontWeight="SemiBold" Margin="0,12,0,0"/>
+                                <TextBox x:Name="BookPrizesBox" AutomationProperties.AutomationId="BookPrizes"
+                                         AcceptsReturn="True" Height="120" VerticalScrollBarVisibility="Auto"
+                                         VerticalContentAlignment="Top" TextChanged="SettingsChanged"/>
+                                <TextBlock Text="Loddintervall (globale loddnummer)" Style="{StaticResource Caption}"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/><ColumnDefinition Width="30"/><ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="FirstTicketBox" AutomationProperties.Name="Første loddnummer" TextChanged="SettingsChanged"/>
+                                    <TextBlock Grid.Column="1" Text="–" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <TextBox x:Name="LastTicketBox" Grid.Column="2" AutomationProperties.Name="Siste loddnummer" TextChanged="SettingsChanged"/>
+                                </Grid>
+                                <TextBlock Text="Usolgte bøker, for eksempel 2, 5-7" Style="{StaticResource Caption}"/>
+                                <TextBox x:Name="UnsoldBooksBox" TextChanged="SettingsChanged"/>
+                                <TextBlock Text="Usolgte loddnummer, for eksempel 12-18, 83" Style="{StaticResource Caption}"/>
+                                <TextBox x:Name="UnsoldTicketsBox" TextChanged="SettingsChanged"/>
+                            </StackPanel>
+                            <TextBlock x:Name="EligibilityText" Style="{StaticResource Caption}"/>
+                            <TextBlock Text="Oppsettet låses mens runden pågår. Hver bok har 50 nummer. Ingen navn eller telefonnummer lagres."
+                                       Style="{StaticResource Caption}"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="Visning og lyd">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="18">
+                            <TextBlock Text="Publikumsskjerm" FontSize="19" FontWeight="SemiBold"/>
+                            <TextBlock Text="Koble til projektoren og velg Utvid skjerm i Windows (Win+P)." Style="{StaticResource Caption}"/>
+                            <ComboBox x:Name="DisplayBox" DisplayMemberPath="Label" SelectedValuePath="Device"
+                                      Padding="8" Margin="0,4,0,8" SelectionChanged="SettingsChanged"/>
+                            <Button Content="Oppdater skjermer" HorizontalAlignment="Left" Click="RefreshDisplays_Click"/>
+                            <Border Background="#FFF1CC" CornerRadius="6" Padding="10" Margin="0,14,0,0">
+                                <TextBlock Text="Forhåndsversjon: Varighet, hastighet og lydinnstillinger lagres, men animasjon og lyd er ikke implementert ennå."
+                                           Foreground="#715016"/>
+                            </Border>
+                            <TextBlock Text="Hjertelodd" FontSize="19" FontWeight="SemiBold" Margin="0,20,0,0"/>
+                            <TextBlock Text="Varighet (sekunder)" Style="{StaticResource Caption}"/>
+                            <TextBox x:Name="HeartDurationBox" TextChanged="SettingsChanged"/>
+                            <TextBlock Text="Tid mellom tallbytter (ms) · lavere er raskere" Style="{StaticResource Caption}"/>
+                            <TextBox x:Name="HeartSpeedBox" TextChanged="SettingsChanged"/>
+                            <TextBlock Text="Boklodd" FontSize="19" FontWeight="SemiBold" Margin="0,12,0,0"/>
+                            <TextBlock Text="Varighet per del: bok og loddnummer (sekunder)" Style="{StaticResource Caption}"/>
+                            <TextBox x:Name="BookDurationBox" TextChanged="SettingsChanged"/>
+                            <TextBlock Text="Tid mellom tallbytter (ms)" Style="{StaticResource Caption}"/>
+                            <TextBox x:Name="BookSpeedBox" TextChanged="SettingsChanged"/>
+                            <TextBlock Text="Pause etter boknummer (sekunder)" Style="{StaticResource Caption}"/>
+                            <TextBox x:Name="BookPauseBox" TextChanged="SettingsChanged"/>
+                            <TextBlock Text="Volum" Style="{StaticResource Caption}"/>
+                            <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" TickFrequency="1"
+                                    IsSnapToTickEnabled="True" ValueChanged="SettingsChanged"
+                                    AutomationProperties.Name="Volum"/>
+                            <CheckBox x:Name="MutedBox" Content="Lydløs" Checked="SettingsChanged" Unchecked="SettingsChanged"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+
+            <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel>
+                        <TextBlock x:Name="RoundTitle" Text="Klar for trekning" FontSize="25" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="RoundStatus" Style="{StaticResource Caption}"/>
+                    </StackPanel>
+                    <WrapPanel Grid.Row="1" Margin="0,10,0,12">
+                        <Button x:Name="StartHeartsButton" Content="Ny hjerterunde" Click="StartHearts_Click"/>
+                        <Button x:Name="StartBooksButton" Content="Start boklotteri" Click="StartBooks_Click"/>
+                    </WrapPanel>
+                    <Border Grid.Row="2" Background="#F3F5EE" CornerRadius="10" Padding="18" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock x:Name="CurrentPrize" FontSize="20" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="CurrentNumber" Text="—" FontSize="56" FontWeight="Bold"/>
+                            <TextBlock x:Name="CurrentBook" Foreground="{StaticResource MutedInk}"/>
+                        </StackPanel>
+                    </Border>
+                    <StackPanel Grid.Row="3">
+                        <Button x:Name="DrawButton" Content="Trekk neste gevinst" Style="{StaticResource PrimaryButton}"
+                                FontSize="19" Padding="16,16" Click="Draw_Click"
+                                AutomationProperties.AutomationId="Draw"/>
+                        <WrapPanel>
+                            <Button x:Name="RevealButton" Content="Vis nå" Click="Reveal_Click"/>
+                            <Button x:Name="EndRoundButton" Content="Avslutt runde" Click="EndRound_Click"/>
+                            <Button x:Name="ShowAudienceButton" Content="Vis publikumsskjerm" Click="ShowAudience_Click"/>
+                        </WrapPanel>
+                    </StackPanel>
+                    <TextBlock Grid.Row="4" Text="Vinnere i denne runden" FontWeight="SemiBold" Margin="0,20,0,10"/>
+                    <ListView x:Name="WinnersList" Grid.Row="5" BorderThickness="0" Background="Transparent"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="#E1E7DF" BorderThickness="0,0,0,1" Padding="4,10">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding NumberText}" FontWeight="Bold" FontSize="19"/>
+                                        <TextBlock Text="{Binding Prize}" Foreground="{StaticResource MutedInk}"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Border>
+        </Grid>
+        <Border Grid.Row="2" Background="#E5EBE2" CornerRadius="8" Padding="12" Margin="0,16,0,0">
+            <TextBlock x:Name="SettingsMessage" Text="Alt lagres automatisk på denne PC-en."/>
+        </Border>
+    </Grid>
+</Window>
