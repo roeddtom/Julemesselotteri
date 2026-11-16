@@ -51,23 +51,36 @@ runde. Gevinstmengden kan ikke overstige tilgjengelige lodd. Øvre grense er
 
 - Iterasjon 1: implementert trekkmotor, transaksjonell tilstand og TXT-logger.
 - Iterasjon 2: operatørvindu med automatisk lagring, låst rundeoppsett, skjermvalg,
-  gjenoppretting og rundekontroller. Enkel publikumsskjerm uten animasjon.
-- Iterasjon 3: under arbeid etter at brukeren eksplisitt godkjente animasjon,
-  lyd, dokumentasjon og avgrensede commits.
-- En selvstendig Windows x64-forhåndsversjon er publisert med profilen `Portable`
-  i `artifacts\win-x64`.
-  Dette er ikke den ferdige MVP-en: den viser vinnertall direkte, uten tromler,
-  bok-først-sekvens, ventetid eller lyd. Lyd- og tidsinnstillinger er kun lagret
-  oppsett foreløpig. `Vis nå` kan vise en lagret trekning etter omstart.
+  gjenoppretting og rundekontroller.
+- Iterasjon 3: ferdig. Publikumsvindu med skalerbart juletema, animerte
+  talltromler som sakker av, bok-først-sekvens, konfigurerbar pause og lokal lyd.
+  `Vis nå` hopper til vinneren fra begge deler og pausen. Lydløs stopper
+  pågående lyd umiddelbart; volum brukes på neste lydsignal.
+- Lukking av publikumsvinduet under animasjon setter trekningen på pause uten å
+  forkaste vinneren. Lukking av operatørvinduet beholder samme vinner til omstart.
+  Tidlig avslutning krever bekreftelse og beholder et allerede valgt vinnertall.
+- Sekundærskjermen holdes over uavhengige lysbildefremvisninger. Hovedskjermen
+  bruker ikke alltid-øverst, slik at operatøren fortsatt er tilgjengelig ved øving
+  med én skjerm. Programmet støtter skjermenes individuelle DPI-skalering.
+- Selvstendig Windows x64-MVP er publisert med profilen `Portable`
+  i `artifacts\win-x64`. Ingen nettbaserte ressurser, mediefiler eller skrifter
+  lastes ned ved kjøring. Lydene syntetiseres lokalt.
 
 ## Verifikasjon og versjonskontroll
 
 Trekkmotoren har 29 automatiserte testtilfeller. En separat WPF-skjermtest bruker
 midlertidige data og åpner ekte vinduer for å kontrollere validering, omvendt
 gevinstrekkefølge, unike nummer, rundebytte, lukking av publikumsvindu og omstart.
+Skjermtesten kontrollerer naturlig varighet, forskjellig tallbyttehastighet,
+bokvisning før globalt loddnummer, bokpause, `Vis nå`, avvist/godkjent tidlig
+avslutning, lukking under bokpause og omstart etter lukking av operatøren.
+Lydkontrollen undersøker gyldig WAV-format, volumnivå og stillhet ved null volum,
+og kaller den native avspillingen på lavt nivå før den stoppes.
 Skjermtesten er også kjørt selvstendig med de nøyaktige app-/kjernedll-ene fra
 den portable publiseringen. Publiseringsmappen inneholder .NET- og WPF-runtime.
-Formateringskontroll og `git diff --check` er godkjent.
+Operatør- og publikumsskjermbilder er visuelt kontrollert.
+Dette erstatter ikke sjekken av fysisk projektor, høyttalere, lesbarhet i rommet
+og PowerPoint-fokus på arrangementets PC.
 
 En utilgjengelig, allerede konfigurert pakkekilde ga feil ved første publisering.
 Publiseringen lyktes med `-p:RestoreIgnoreFailedSources=true`, uten endring av
@@ -76,5 +89,7 @@ utilgjengelige kilden; disse er ikke applikasjonsfeil eller fullført
 avhengighetssikkerhetskontroll.
 
 Iterasjon 1 er committet som `29cbd5a` (`feat(core): add durable lottery engine and draw rules`).
-Første commit-forsøk etter iterasjon 2 ble avslått. Brukeren har deretter
-eksplisitt godkjent videre endringer og avgrensede conventional commits.
+Iterasjon 2 er committet som `3cf9a25`
+(`feat(app): add Norwegian operator controls and round recovery`).
+Iterasjon 3 følger med egen conventional commit for animasjon, lyd og tilhørende
+tester og dokumentasjon.

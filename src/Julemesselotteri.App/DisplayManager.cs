@@ -58,7 +58,9 @@ public static class DisplayManager
         var display = displays.FirstOrDefault(d => d.Device == device)
             ?? displays.FirstOrDefault(d => !d.Primary) ?? displays.FirstOrDefault();
         if (display is null) throw new InvalidOperationException("Fant ingen tilgjengelig publikumsskjerm.");
-        if (!SetWindowPos(new WindowInteropHelper(window).Handle, 0,
+        // Cover independent slide shows on the projector without trapping the operator on a single screen.
+        window.Topmost = !display.Primary;
+        if (!SetWindowPos(new WindowInteropHelper(window).Handle, window.Topmost ? -1 : 0,
                 display.Left, display.Top, display.Width, display.Height, 0x0010 | 0x0040))
             throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
     }

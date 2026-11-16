@@ -1,12 +1,11 @@
-# Brukerveiledning for forhåndsversjonen
+# Brukerveiledning
 
-Dette er en fungerende forhåndsversjon med **statisk vinnervisning**.
-Slot-animasjon, bok-først-sekvens og lyd gjenstår før planlagt MVP er ferdig.
+MVP for hjertelodd og boklodd med animert vinnervisning og lyd.
 Test med de faktiske skjermene før programmet brukes på et arrangement.
 
 ## Starte
 
-1. Pakk ut hele den portable mappen på en Windows x64-PC. Ikke flytt bare EXE-filen.
+1. Pakk ut hele den portable mappen på en Windows 10/11 x64-PC. Ikke flytt bare EXE-filen.
 2. Koble til projektoren. Velg **Utvid** med `Win+P`, ikke Dupliser.
 3. Start `Julemesselotteri.App.exe`. Programmet trenger ikke internett.
 4. Velg projektoren under **Visning og lyd**. Bruk **Oppdater skjermer** ved behov.
@@ -14,7 +13,10 @@ Test med de faktiske skjermene før programmet brukes på et arrangement.
 Operatørvinduet er ikke fullskjerm. Publikumsvinduet åpnes separat på valgt
 skjerm når en runde starter. På en PC med bare én skjerm vises begge vinduer der.
 PowerPoint kjøres uavhengig; programmet starter, stopper eller bytter ikke lysbilder.
-Ingen garanti gis for fokusrekkefølgen mellom PowerPoint og andre åpne programmer.
+På en sekundærskjerm holdes publikumsvinduet øverst, over lysbildefremvisningen.
+På hovedskjermen holdes det ikke alltid øverst, slik at operatørvinduet er
+tilgjengelig også ved øving uten projektor. Kontroller fokusrekkefølgen med
+PowerPoint på den faktiske PC-en.
 
 ## Gevinster
 
@@ -26,15 +28,18 @@ Ugyldige felt må rettes før en ny runde kan startes.
 ## Hjertelodd
 
 1. Velg **Ny hjerterunde**. Gevinstlisten låses for runden.
-2. Velg **Trekk neste gevinst** for hver gevinst. Nummeret blir vist direkte.
+2. Velg **Trekk neste gevinst** for hver gevinst. Tromlene viser vinneren når
+   animasjonen er ferdig; **Vis nå** hopper direkte til resultatet.
 3. Samme nummer kan ikke trekkes igjen innen runden. Ulike nummer på samme
    fysiske hjerte kan vinne; appen har ikke en kartlegging fra nummer til hjerter.
 4. Siste vinner blir stående. Velg **Avslutt runde** når dere er klare.
    Publikumsvinduet lukkes, og PowerPoint kan vises igjen.
 5. Neste hjerterunde bruker samme gevinster, men alle nummer 1–1000 er ledige igjen.
 
-En uferdig runde kan avsluttes tidlig, med bekreftelse.
-Det er også mulig å starte en ny hjerterunde fra en aktiv hjerterunde, med bekreftelse.
+En uferdig runde kan avsluttes tidlig, med bekreftelse. Et allerede valgt nummer
+beholdes som vinner selv om animasjonen ikke ble fullført.
+En ny hjerterunde kan startes direkte etter en ferdig runde uten å endre gevinster.
+Hvis forrige hjerterunde er uferdig, kreves bekreftelse.
 Gevinster som ikke ble trukket, blir ikke loggført som utdelt.
 
 ## Boklodd
@@ -44,7 +49,9 @@ Gevinster som ikke ble trukket, blir ikke loggført som utdelt.
 3. Registrer usolgte globale loddnummer, for eksempel `12-18, 83`.
    Komma, semikolon, mellomrom og linjeskift kan skille intervallene.
 4. Kontroller antall ledige nummer. Velg **Start boklotteri**.
-5. Trekk hver gevinst. Appen viser både loddnummer og boknummer.
+5. Trekk hver gevinst. Appen viser først boknummeret, venter den innstilte pausen
+   og animerer deretter det globale loddnummeret. **Vis nå** avslutter hele
+   sekvensen, også hvis bokdelen eller pausen fortsatt pågår.
    Slå opp navn/telefon i papirboka; opplysningene skal ikke legges inn i appen.
 6. Avslutt runden etter siste gevinst. Bokvinnere beholdes som utelukket i hele
    arrangementet, også etter omstart og ved oppstart av en ny bokrunde.
@@ -52,6 +59,24 @@ Gevinster som ikke ble trukket, blir ikke loggført som utdelt.
 Bok 1 har 1–50, bok 2 har 51–100, osv. Lodd 73 vises som lodd 73 i bok 2.
 En delvis solgt bok gir ikke dårligere vinnersjanse per solgte lodd enn en full bok.
 Det velges ett lodd fra alle kvalifiserte lodd, ikke først en tilfeldig bok.
+
+## Animasjon og lyd
+
+Under **Visning og lyd** har hvert lotteri egne innstillinger:
+
+- Varighet: 0,5–60 sekunder. For boklodd gjelder dette hver av de to delene;
+  samlet tid er omtrent to ganger varigheten pluss bokpausen.
+- Tallbytte: 30–500 millisekunder. Lavere verdi gir raskere tromler.
+  Tromlene sakker gradvis av mot slutten uten å endre valgt vinner.
+- Bokpause: 0–30 sekunder mellom ferdig boknummer og loddnummer.
+- Volum: 0–100. Bruk **Lydløs** for å stoppe lyd umiddelbart.
+  Volumendringer brukes på neste lydsignal; de kan gjøres mens trekningen pågår.
+- **Test lyd** spiller vinnersignalet med valgt volum/lydløs når ingen animasjon pågår.
+
+Tidsendringer gjelder neste trekning. Vinnertallet bestemmes og lagres før
+animasjonen; de tilfeldige sifrene underveis påvirker ikke utfallet.
+Ingen ekstern musikk eller nettforbindelse brukes. Windows må ha en fungerende
+lydutgang; sjekk også Windows-volum, programvolum og eventuell HDMI-lydutgang.
 
 ## Omstart og filer
 
@@ -63,7 +88,9 @@ Det velges ett lodd fra alle kvalifiserte lodd, ikke først en tilfeldig bok.
 Et vinnertall lagres før det vises. Etter et avbrudd tilbys **Fortsett trekning**
 eller **Vis nå** med samme lagrede vinner. Det trekkes ikke et nytt nummer.
 Hvis bare publikumsvinduet lukkes, kan det åpnes igjen fra operatørvinduet.
-`Esc` i publikumsvinduet lukker det uten å avslutte runden.
+Under en animasjon settes den da på pause med samme lagrede vinnertall.
+Velg **Fortsett trekning** for ny visning av animasjonen, eller **Vis nå** for
+direkte visning. `Esc` i publikumsvinduet lukker det uten å avslutte runden.
 
 Logger kan gjenskapes ved neste programstart fra gjeldende arrangementstilstand.
 Et loggproblem vises som advarsel; selve vinneren er fremdeles lagret i tilstandsfilen.
@@ -81,7 +108,8 @@ eksisterende TXT-logger beholdes. Dette er ikke knappen for neste hjerterunde.
 
 1. Kjør en øvingsrunde og bekreft lesbarhet fra bakerst i rommet.
 2. Kontroller skjermvalg, Windows-skalering og at PowerPoint fortsatt er synlig
-   etter at publikumsvinduet lukkes.
+   etter at publikumsvinduet lukkes. Bruk **Test lyd** og kontroller både
+   tallbyttelyden og vinnersignalet på den faktiske lydutgangen.
 3. Kontroller at loggmappen kan skrives til og at TXT-filen inneholder riktig
    gevinst og nummer. Ta sikkerhetskopi til en annen fysisk enhet.
 4. Gjennomfør en omstart i øvingsarrangementet og kontroller samme vinnerhistorikk.

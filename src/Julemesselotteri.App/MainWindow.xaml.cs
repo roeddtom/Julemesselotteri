@@ -12,14 +12,20 @@ public partial class MainWindow : Window
 {
     private readonly LotteryEngine _engine;
     private readonly EventFileStore _store;
+    private readonly Func<string, string, bool>? _confirm;
     private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(800) };
+    private readonly DrawSound _sound = new();
     private AudienceWindow? _audience;
+    private CancellationTokenSource? _animationCancellation;
+    private bool _drawing;
+    private bool _closing;
     private bool _loading = true;
 
-    public MainWindow(LotteryEngine engine, EventFileStore store)
+    public MainWindow(LotteryEngine engine, EventFileStore store, Func<string, string, bool>? confirm = null)
     {
         _engine = engine;
         _store = store;
+        _confirm = confirm;
         InitializeComponent();
         PopulateSettings();
         _loading = false;
@@ -60,6 +66,7 @@ public partial class MainWindow : Window
     private void SettingsChanged(object sender, RoutedEventArgs e)
     {
         if (_loading) return;
+        if (MutedBox.IsChecked == true || VolumeSlider.Value == 0) _sound.Stop();
         _saveTimer.Stop();
         _saveTimer.Start();
     }
@@ -123,6 +130,9 @@ public partial class MainWindow : Window
         ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException
             or System.ComponentModel.Win32Exception;
 
+    private bool Confirm(string message, string title) => _confirm?.Invoke(message, title) ??
+        MessageBox.Show(this, message, title, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+
     private void Execute(Action action)
     {
         try
@@ -157,10 +167,11 @@ public partial class MainWindow : Window
 
     private void StartRound(LotteryMode mode)
     {
-        if (_engine.State.ActiveRound is not null)
+        if (_drawing) return;
+        if (_engine.State.ActiveRound is { } active)
         {
-            if (MessageBox.Show(this, "Avslutte den uferdige runden og starte en ny? Gevinster som ikke er trukket, hoppes over.",
-                    "Ny runde", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            if ((active.PendingDraw is not null || active.Draws.Count < active.Prizes.Count) &&
+                !Confirm("Avslutte den uferdige runden og starte en ny? Gevinster som ikke er trukket, hoppes over.", "Ny runde"))
                 return;
             Execute(() =>
             {
@@ -178,33 +189,75 @@ public partial class MainWindow : Window
         });
     }
 
-    private void Draw_Click(object sender, RoutedEventArgs e)
+    private async void Draw_Click(object sender, RoutedEventArgs e)
     {
-        if (!SaveSettings()) return;
-        Execute(() =>
+        if (_drawing || !SaveSettings()) return;
+        try
         {
-            _engine.SelectWinner();
-            _engine.RevealWinner();
+            var draw = _engine.SelectWinner();
+            SyncLogs();
             EnsureAudience();
-        });
+            var round = _engine.State.ActiveRound!;
+            var settings = _engine.State.Settings;
+            using var cancellation = new CancellationTokenSource();
+            _animationCancellation = cancellation;
+            _drawing = true;
+            Render();
+            await _audience!.PlayAsync(round, draw, round.Mode == LotteryMode.Hearts
+                ? settings.HeartsAnimation : settings.BooksAnimation, _sound, SoundOptions, cancellation.Token);
+            cancellation.Token.ThrowIfCancellationRequested();
+            _engine.RevealWinner();
+            SyncLogs();
+            var options = SoundOptions();
+            _sound.Win(options.Volume, options.Muted);
+        }
+        catch (OperationCanceledException)
+        {
+            _sound.Stop();
+            if (!_closing && _engine.State.ActiveRound?.PendingDraw is not null)
+                SettingsMessage.Text = "Trekningen er satt på pause. Fortsett trekningen med samme lagrede vinner.";
+        }
+        catch (Exception ex) when (IsExpected(ex))
+        {
+            _sound.Stop();
+            SettingsMessage.Text = $"Trekningen ble stoppet: {ex.Message}";
+        }
+        finally
+        {
+            _animationCancellation = null;
+            _drawing = false;
+            if (!_closing) Render();
+        }
     }
 
-    private void Reveal_Click(object sender, RoutedEventArgs e) => Execute(() =>
+    private (int Volume, bool Muted) SoundOptions() => ((int)VolumeSlider.Value, MutedBox.IsChecked == true);
+
+    private void Reveal_Click(object sender, RoutedEventArgs e)
     {
-        _engine.RevealWinner();
-        EnsureAudience();
-    });
+        if (_drawing)
+        {
+            _audience?.RevealNow();
+            return;
+        }
+        Execute(() =>
+        {
+            _engine.RevealWinner();
+            EnsureAudience();
+            var options = SoundOptions();
+            _sound.Win(options.Volume, options.Muted);
+        });
+    }
 
     private void EndRound_Click(object sender, RoutedEventArgs e)
     {
         var round = _engine.State.ActiveRound;
         if (round is null) return;
         if ((round.Draws.Count < round.Prizes.Count || round.PendingDraw is not null) &&
-            MessageBox.Show(this, "Avslutte runden før alle gevinstene er vist? Et allerede valgt nummer beholdes som vinner.",
-                "Avslutt runde", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            !Confirm("Avslutte runden før alle gevinstene er vist? Et allerede valgt nummer beholdes som vinner.", "Avslutt runde"))
             return;
         Execute(() =>
         {
+            _animationCancellation?.Cancel();
             _engine.RevealWinner();
             _engine.EndRound();
             CloseAudience();
@@ -219,11 +272,16 @@ public partial class MainWindow : Window
         if (_audience is null)
         {
             _audience = new AudienceWindow();
-            _audience.Closed += (_, _) => _audience = null;
+            _audience.Closed += (_, _) =>
+            {
+                _audience = null;
+                _animationCancellation?.Cancel();
+                _sound.Stop();
+            };
             _audience.Show();
-            DisplayManager.Place(_audience, _engine.State.Settings.DisplayDevice);
             Activate();
         }
+        DisplayManager.Place(_audience, _engine.State.Settings.DisplayDevice);
         _audience.UpdateRound(_engine.State.ActiveRound);
     }
 
@@ -238,12 +296,12 @@ public partial class MainWindow : Window
         var state = _engine.State;
         var round = state.ActiveRound;
         LotterySetup.IsEnabled = round is null;
-        StartHeartsButton.IsEnabled = round is null || round.Mode == LotteryMode.Hearts;
-        StartBooksButton.IsEnabled = round is null;
-        NewEventButton.IsEnabled = round is null;
+        StartHeartsButton.IsEnabled = !_drawing && (round is null || round.Mode == LotteryMode.Hearts);
+        StartBooksButton.IsEnabled = !_drawing && round is null;
+        NewEventButton.IsEnabled = !_drawing && round is null;
         EndRoundButton.IsEnabled = round is not null;
-        DrawButton.IsEnabled = round is not null && (round.PendingDraw is not null || round.Draws.Count < round.Prizes.Count);
-        DrawButton.Content = round?.PendingDraw is not null ? "Fortsett trekning" : "Trekk neste gevinst";
+        DrawButton.IsEnabled = !_drawing && round is not null && (round.PendingDraw is not null || round.Draws.Count < round.Prizes.Count);
+        DrawButton.Content = _drawing ? "Trekker …" : round?.PendingDraw is not null ? "Fortsett trekning" : "Trekk neste gevinst";
         RevealButton.IsEnabled = round?.PendingDraw is not null;
         ShowAudienceButton.IsEnabled = round is not null;
         RoundTitle.Text = round is null ? "Klar for trekning" : round.Mode == LotteryMode.Hearts ? "Hjertelodd" : "Boklodd";
@@ -252,8 +310,8 @@ public partial class MainWindow : Window
                 (round.Draws.Count == round.Prizes.Count && round.PendingDraw is null ? " · Avslutt runden når dere er klare." : "");
         var latest = round?.Draws.LastOrDefault(d => d.RevealedAt is not null);
         CurrentPrize.Text = round?.PendingDraw?.Prize ?? latest?.Prize ?? round?.Prizes.FirstOrDefault() ?? "Ingen aktiv runde";
-        CurrentNumber.Text = round?.PendingDraw is not null ? "Lagret" : latest?.Number.ToString() ?? "—";
-        CurrentBook.Text = latest is not null && round?.Mode == LotteryMode.Books ? $"Bok {latest.Book}" : "";
+        CurrentNumber.Text = _drawing ? "Trekker …" : round?.PendingDraw is not null ? "Lagret" : latest?.Number.ToString() ?? "—";
+        CurrentBook.Text = round?.PendingDraw is null && latest is not null && round?.Mode == LotteryMode.Books ? $"Bok {latest.Book}" : "";
         WinnersList.ItemsSource = round?.Draws.Where(d => d.RevealedAt is not null).Reverse()
             .Select(d => new WinnerItem(d.Prize, round.Mode == LotteryMode.Books
                 ? $"Lodd {d.Number} · Bok {d.Book}" : $"Lodd {d.Number}")).ToArray();
@@ -264,8 +322,7 @@ public partial class MainWindow : Window
     private void NewEvent_Click(object sender, RoutedEventArgs e)
     {
         if (!SaveSettings() || !SyncLogs()) return;
-        if (MessageBox.Show(this, "Starte et helt nytt arrangement? Alle nummer blir tilgjengelige igjen. Eksisterende TXT-logger beholdes.",
-                "Nytt arrangement", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+        if (!Confirm("Starte et helt nytt arrangement? Alle nummer blir tilgjengelige igjen. Eksisterende TXT-logger beholdes.", "Nytt arrangement"))
             return;
         Execute(_engine.NewEvent);
     }
@@ -279,17 +336,26 @@ public partial class MainWindow : Window
     private void RefreshDisplays_Click(object sender, RoutedEventArgs e) =>
         RefreshDisplays((DisplayBox.SelectedItem as DisplayInfo)?.Device ?? "");
 
+    private void TestSound_Click(object sender, RoutedEventArgs e)
+    {
+        if (_drawing) return;
+        var options = SoundOptions();
+        _sound.Win(options.Volume, options.Muted);
+    }
+
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
-        if (!SaveSettings() && MessageBox.Show(this, "Oppsettet kunne ikke lagres. Lukke likevel? Tidligere lagrede trekninger er bevart.",
-                "Oppsett ikke lagret", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+        if (!SaveSettings() && !Confirm("Oppsettet kunne ikke lagres. Lukke likevel? Tidligere lagrede trekninger er bevart.", "Oppsett ikke lagret"))
         {
             e.Cancel = true;
             return;
         }
+        _closing = true;
         _saveTimer.Stop();
+        _animationCancellation?.Cancel();
         SyncLogs();
         CloseAudience();
+        _sound.Dispose();
     }
 }
 
