@@ -106,7 +106,11 @@ Hver side har stående A5-proporsjoner. Tabellsiden er like bred som forsiden;
 et åpent oppslag består av to slike sider.
 Tabellsiden starter med kolonneoverskriftene, uten gjentatt boknummer eller
 loddintervall over tabellen. Disse opplysningene vises ellers i publikumsvinduet.
-Navn og telefon er tomme; programmet leser ikke håndskrift fra papirbøkene.
+Navn- og telefonfeltene fylles med tilfeldig valgte dekorative håndskriftbilder
+fra de 40 medfølgende radbildene. Hvert bilde dekker begge feltene.
+Samme lodd beholder sitt bilde når boka blar tilbake i samme visning.
+Bildene er ikke knyttet til faktiske loddkjøpere eller vinnere; programmet
+leser ikke håndskrift fra papirbøkene. Slå alltid opp vinneren i den fysiske boka.
 Boknummer og antall bøker på forsiden beregnes fra trekkeoppsettet.
 **Vis nå** hopper direkte til riktig side og vinnerrad. Uten valget brukes
 den vanlige tallanimasjonen. Hjertelodd påvirkes ikke.

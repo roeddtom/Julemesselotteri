@@ -97,6 +97,12 @@ Det rekonstruerte oppslaget viser en informasjonsside og aktuell tabellside,
 ikke en nøyaktig gjengivelse av duplex-arkenes trykkoppsett.
 Forsiden og begge oppslagssidene har stående A5-proporsjoner (148:210).
 Oppslaget er to forsidebredder, og tabellkolonnene tilpasses én side.
+De 40 transparente PNG-radene i `design\bokloddrader` bygges inn i appen.
+Hver av bokas 50 rader får et tilfeldig valgt dekorbilde med tilbakelegging,
+vist proporsjonalt over navn- og telefonkolonnene uten å dekke loddnummeret.
+Bildet beholdes ved sidevending og sluttmarkering i samme bokvisning.
+Dette bruker `Random.Shared`, separat fra den kryptografiske vinnergeneratoren;
+radbildene påvirker aldri trekningen og er ikke deltakerdata.
 
 Valgt vinner, lagring, bokpause, tidsinnstillinger, avbrytelse og omstart bruker
 samme trekkmotor som før. `Vis nå` og gjenopptatt vinner viser riktig side/rad.
@@ -105,7 +111,8 @@ bokgrenser og lodd 4000 i bok 80. Skjermtesten dekker på/av, lagring av valget,
 skjult bok under trekning, forside etter avslørt loddnummer, sidevending,
 vinnerrad, sidemapping og avbrudd/gjenoppretting med funksjonen på.
 Testvalget `--headless-booklet` kontrollerer sidemapping, A5-proporsjoner,
-sidebredder, tabelltekstens plass og tallanimasjoner uten å vise vinduer.
+sidebredder, tabelltekstens plass, innebygde radbilder, kolonnedekning,
+stabile radbilder ved sidevending og tallanimasjoner uten å vise vinduer.
 Det kan lagre et offscreen-bilde av oppslaget. Dette erstatter ikke full
 interaktiv skjermtest av plassering, operatørflyt og fysisk projektor.
 

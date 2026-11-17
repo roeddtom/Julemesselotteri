@@ -481,7 +481,7 @@ internal static class Program
         var rows = table.Children.OfType<StackPanel>().Single();
         foreach (var row in rows.Children.Cast<Grid>().Prepend(table.Children.OfType<Grid>().Single()))
         {
-            foreach (var cell in row.Children.Cast<Border>())
+            foreach (var cell in row.Children.OfType<Border>())
             {
                 var text = (TextBlock)cell.Child;
                 var naturalText = new FormattedText(text.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
@@ -490,6 +490,27 @@ internal static class Program
                 Check(naturalText.Width + text.Padding.Left + text.Padding.Right <= cell.ActualWidth,
                     $"Table text '{text.Text}' fits without clipping ({naturalText.Width + text.Padding.Left + text.Padding.Right:F1} <= {cell.ActualWidth:F1})");
             }
+        }
+        var handwriting = rows.Children.Cast<Grid>().Select(row => row.Children.OfType<Image>().Single()).ToArray();
+        foreach (var image in handwriting)
+        {
+            Check(image.Source is BitmapSource { PixelWidth: > 0, PixelHeight: > 0 } &&
+                image.Stretch == Stretch.Uniform, "Every ticket row contains a loaded, proportionally scaled handwriting image");
+            Check(Grid.GetColumn(image) == 1 && Grid.GetColumnSpan(image) == 2,
+                "Handwriting spans name and phone columns without covering ticket numbers");
+            Check(image.ActualWidth <= table.ActualWidth - 50 && image.ActualHeight <= 25,
+                "Handwriting remains within its row and the name/phone area");
+        }
+        booklet.ShowPage(1, false);
+        booklet.Reveal(draw);
+        Check(rows.Children.Cast<Grid>().Select(row => row.Children.OfType<Image>().Single().Source)
+            .SequenceEqual(handwriting.Select(image => image.Source)),
+            "Returning to a page preserves the same randomly assigned writing for each ticket");
+        for (var index = 1; index <= 40; index++)
+        {
+            var source = new BitmapImage(new Uri(
+                $"pack://application:,,,/Julemesselotteri.App;component/Assets/book-rows/rad_{index:00}.png"));
+            Check(source.PixelWidth > 0 && source.PixelHeight > 0, "All forty supplied row images are embedded");
         }
         if (screenshotDirectory is not null)
         {

@@ -10,6 +10,14 @@ namespace Julemesselotteri.App;
 
 public sealed class BookletView : Grid
 {
+    private static readonly Lazy<BitmapSource[]> Handwriting = new(() =>
+        Enumerable.Range(1, 40).Select(index =>
+        {
+            var image = new BitmapImage(new Uri(
+                $"pack://application:,,,/Julemesselotteri.App;component/Assets/book-rows/rad_{index:00}.png"));
+            image.Freeze();
+            return (BitmapSource)image;
+        }).ToArray());
     private readonly Border _cover;
     private readonly Border _paper;
     private readonly StackPanel _rows = new();
@@ -18,6 +26,7 @@ public sealed class BookletView : Grid
     private readonly ScaleTransform _turn = new(1, 1);
     private int _book;
     private int _page;
+    private int[] _rowImages = [];
     public int Page => _page;
     public int? HighlightedNumber { get; private set; }
 
@@ -71,7 +80,8 @@ public sealed class BookletView : Grid
         Visibility = Visibility.Collapsed;
     }
 
-    private static Grid CreateRow(string ticket, string name, string phone, bool heading = false)
+    private static Grid CreateRow(string ticket, string name, string phone, bool heading = false,
+        BitmapSource? handwriting = null)
     {
         var grid = new Grid { Height = heading ? 24 : 25 };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(50) });
@@ -89,13 +99,33 @@ public sealed class BookletView : Grid
             Grid.SetColumn(border, i);
             grid.Children.Add(border);
         }
+        if (handwriting is not null)
+        {
+            var image = new Image
+            {
+                Source = handwriting,
+                Stretch = Stretch.Uniform,
+                Margin = new Thickness(3, 1, 3, 1),
+                IsHitTestVisible = false
+            };
+            Grid.SetColumn(image, 1);
+            Grid.SetColumnSpan(image, 2);
+            grid.Children.Add(image);
+        }
         return grid;
+    }
+
+    private void SetBook(int book)
+    {
+        if (_book == book) return;
+        _book = book;
+        _rowImages = Enumerable.Range(0, 50).Select(_ => Random.Shared.Next(Handwriting.Value.Length)).ToArray();
     }
 
     public void ShowCover(DrawRecord draw, int totalBooks)
     {
         Visibility = Visibility.Visible;
-        _book = draw.Book;
+        SetBook(draw.Book);
         _page = 0;
         HighlightedNumber = null;
         _winner.Text = "";
@@ -115,7 +145,8 @@ public sealed class BookletView : Grid
         _paper.Visibility = Visibility.Visible;
         _rows.Children.Clear();
         for (var row = 1; row <= 10; row++)
-            _rows.Children.Add(CreateRow(((_book - 1) * 50 + (page - 1) * 10 + row).ToString(), "", ""));
+            _rows.Children.Add(CreateRow(((_book - 1) * 50 + (page - 1) * 10 + row).ToString(), "", "",
+                handwriting: Handwriting.Value[_rowImages[(page - 1) * 10 + row - 1]]));
         _turn.BeginAnimation(ScaleTransform.ScaleXProperty, null);
         if (animate)
         {
@@ -134,7 +165,7 @@ public sealed class BookletView : Grid
     public void Reveal(DrawRecord draw)
     {
         if (_book != draw.Book || HighlightedNumber != draw.Number) _page = 0;
-        _book = draw.Book;
+        SetBook(draw.Book);
         var local = (draw.Number - 1) % 50;
         ShowPage(local / 10 + 1, false);
         _cover.Visibility = Visibility.Hidden;
