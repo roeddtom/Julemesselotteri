@@ -13,6 +13,10 @@
 - Gevinster: én per linje, hovedgevinst øverst. Trekkes nedenfra og opp.
 - Én trekk-knapp. Separat hastighet og varighet per lotteri.
 - Boklodd viser bok først, pause, deretter globalt loddnummer. Ingen radnummer.
+- Etter bokvisning står bokas fulle 50-nummersintervall ved boknummeret, også
+  under og etter loddvisning. Animasjonen velger hele lodd fra den aktuelle boka,
+  begrenset til arrangementets intervall og uten usolgte lodd eller rundens
+  tidligere vinnere. Den lagrede sluttvinneren og like vinnersjanser er uendret.
 - Vis nå avslutter animasjonen. Avslutt runde stopper videre trekking og lukker
   publikumsvinduet. Siste vinner beholdes til operatøren avslutter.
 - Automatisk vinnerliste etter visning; stort, varmt juletema; lyd med volum/lydløs.

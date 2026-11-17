@@ -93,7 +93,7 @@ internal static class Program
             var bookDraw = Stopwatch.StartNew();
             Click(window, "DrawButton");
             Check(audience.DisplayedStage == "FØRST FINNER VI BOKA", "Book is animated first");
-            WaitUntil(() => Control<TextBlock>(audience, "BookText").Text == "Bok 2", "Book revealed before ticket");
+            WaitUntil(() => Control<TextBlock>(audience, "BookText").Text == "Bok 2 · Lodd 51–100", "Book and range revealed before ticket");
             Check(audience.DisplayedNumber == "02", "Book pause displays correct book");
             Check(engine.State.ActiveRound!.PendingDraw is not null, "Book reveal is not a complete ticket reveal");
             WaitUntil(() => audience.DisplayedStage == "LODDNUMMER", "Ticket follows book pause");
@@ -129,7 +129,7 @@ internal static class Program
             Check(Control<Button>(window, "DrawButton").Content.ToString() == "Fortsett trekning", "Recovery offered");
             Click(window, "DrawButton");
             audience = app.Windows.OfType<AudienceWindow>().Single();
-            WaitUntil(() => Control<TextBlock>(audience, "BookText").Text == $"Bok {pending.Book}",
+            WaitUntil(() => Control<TextBlock>(audience, "BookText").Text.StartsWith($"Bok {pending.Book} · Lodd "),
                 "Recovered book reaches its pause");
             audience.Close();
             WaitUntil(() => Control<Button>(window, "DrawButton").Content.ToString() == "Fortsett trekning",
@@ -161,6 +161,7 @@ internal static class Program
             Check(store.Load()!.ActiveRound!.PendingDraw!.Id == interrupted, "Closing operator preserves interrupted selection");
             Check(new LotteryEngine(store).SelectWinner().Id == interrupted, "Restart after operator close does not reroll");
             CheckAnimationSpeed();
+            CheckBookTicketAnimation();
             CheckAudio();
             Console.WriteLine("PASS: animation stages/timing, reveal-now, safe cancellation/end/restart, rounds, logs and audio.");
             return 0;
@@ -320,6 +321,57 @@ internal static class Program
         Check(fastTicks > slowTicks, "Configured speed changes reel movement frequency independently of duration");
         Check(audience.DisplayedNumber == "73", "Animation speed cannot change selected winner");
         audience.Close();
+    }
+
+    private static void CheckBookTicketAnimation()
+    {
+        foreach (var number in new[] { 1, 50, 51, 100, 101, 125 })
+        {
+            var audience = new AudienceWindow();
+            using var sound = new DrawSound();
+            var draw = new DrawRecord { Number = number, Prize = "Gevinst" };
+            var book = draw.Book;
+            var first = (book - 1) * 50 + 1;
+            var last = book * 50;
+            var excluded = number == first ? first + 1 : first;
+            var previous = number == last ? last - 1 : Math.Min(last, 125);
+            var round = new LotteryRound
+            {
+                Mode = LotteryMode.Books,
+                Prizes = ["Tidligere", "Gevinst"],
+                Books = new() { LastTicket = 125, UnsoldTickets = excluded.ToString() },
+                Draws =
+                [
+                    new() { Number = previous, Prize = "Tidligere", RevealedAt = DateTimeOffset.Now },
+                    draw
+                ]
+            };
+            var frames = 0;
+            var animation = audience.PlayAsync(round, draw,
+                new() { DurationSeconds = 0.5, TickMilliseconds = 30, BookPauseSeconds = 0 },
+                sound, () =>
+                {
+                    if (audience.DisplayedStage == "LODDNUMMER")
+                    {
+                        var shown = int.Parse(audience.DisplayedNumber);
+                        Check(shown >= first && shown <= last && shown <= 125, "Animated tickets stay inside the drawn book and event range");
+                        Check(shown != excluded && shown != previous, "Animated tickets exclude unsold tickets and earlier winners");
+                        Check(Control<TextBlock>(audience, "BookText").Text == $"Bok {book} · Lodd {first}–{last}",
+                            "Book range remains visible during ticket animation");
+                        frames++;
+                    }
+                    return (0, true);
+                }, CancellationToken.None);
+            WaitUntil(() => animation.IsCompleted, "Constrained book animation completes");
+            animation.GetAwaiter().GetResult();
+            Check(frames > 1, "Constrained ticket frames were checked");
+            Check(audience.DisplayedNumber == number.ToString(), "Animation ends on the saved winner");
+            draw.RevealedAt = DateTimeOffset.Now;
+            audience.UpdateRound(round);
+            Check(Control<TextBlock>(audience, "BookText").Text == $"Bok {book} · Lodd {first}–{last}",
+                "Range remains beside the book after reveal and refresh");
+            audience.Close();
+        }
     }
 
     private static void Check(bool condition, string message)

@@ -29,7 +29,7 @@ public partial class AudienceWindow : Window
         PrizeText.Text = round.PendingDraw?.Prize ?? last?.Prize ?? round.Prizes.First();
         StageText.Text = round.PendingDraw is not null ? "TREKNING VENTER" : last is null ? "ER DERE KLARE?" : "VINNERNUMMER";
         ShowDigits(round.PendingDraw is not null ? "—" : last?.Number.ToString() ?? "—", false);
-        BookText.Text = round.PendingDraw is null && last is not null && round.Mode == LotteryMode.Books ? $"Bok {last.Book}" : "";
+        BookText.Text = round.PendingDraw is null && last is not null && round.Mode == LotteryMode.Books ? BookLabel(last) : "";
         HintText.Text = last is null || round.PendingDraw is not null ? "Lykke til!" : "Gratulerer!";
     }
 
@@ -51,15 +51,24 @@ public partial class AudienceWindow : Window
                 StageText.Text = "FØRST FINNER VI BOKA";
                 await SpinAsync(draw.Book, Math.Max(2, ((round.Books.LastTicket - 1) / 50 + 1).ToString().Length),
                     settings, sound, soundOptions, token);
-                BookText.Text = $"Bok {draw.Book}";
+                BookText.Text = BookLabel(draw);
                 HintText.Text = "Finn fram boka …";
                 await WaitAsync(TimeSpan.FromSeconds(settings.BookPauseSeconds), token);
             }
             StageText.Text = "LODDNUMMER";
             HintText.Text = "Lykke til!";
+            int[]? bookTickets = null;
+            if (round.Mode == LotteryMode.Books)
+            {
+                var first = (draw.Book - 1) * 50 + 1;
+                var last = draw.Book * 50;
+                bookTickets = TicketRules.EligibleBooks(round.Books,
+                        round.Draws.Where(d => d.Id != draw.Id).Select(d => d.Number))
+                    .Where(n => n >= first && n <= last).ToArray();
+            }
             await SpinAsync(draw.Number, Math.Max(4,
                     (round.Mode == LotteryMode.Hearts ? 1000 : round.Books.LastTicket).ToString().Length),
-                settings, sound, soundOptions, token);
+                settings, sound, soundOptions, token, bookTickets);
             StageText.Text = "VINNERNUMMER";
             ShowDigits(draw.Number.ToString(), false);
             HintText.Text = "Gratulerer!";
@@ -70,8 +79,11 @@ public partial class AudienceWindow : Window
         }
     }
 
+    private static string BookLabel(DrawRecord draw) =>
+        $"Bok {draw.Book} · Lodd {(draw.Book - 1) * 50 + 1}–{draw.Book * 50}";
+
     private async Task SpinAsync(int result, int digits, AnimationSettings settings, DrawSound sound,
-        Func<(int Volume, bool Muted)> soundOptions, CancellationToken token)
+        Func<(int Volume, bool Muted)> soundOptions, CancellationToken token, int[]? candidates = null)
     {
         var final = result.ToString().PadLeft(digits, '0');
         var watch = Stopwatch.StartNew();
@@ -80,12 +92,22 @@ public partial class AudienceWindow : Window
         {
             token.ThrowIfCancellationRequested();
             var progress = watch.Elapsed.TotalSeconds / duration.TotalSeconds;
-            var display = new char[digits];
-            for (var i = 0; i < digits; i++)
-                display[i] = progress > 0.65 + 0.25 * i / digits
-                    ? final[i] : (char)('0' + Random.Shared.Next(10));
+            string display;
+            if (candidates is not null)
+            {
+                // Choose complete tickets: independently stopping digits could show numbers from another book.
+                display = candidates[Random.Shared.Next(candidates.Length)].ToString().PadLeft(digits, '0');
+            }
+            else
+            {
+                var characters = new char[digits];
+                for (var i = 0; i < digits; i++)
+                    characters[i] = progress > 0.65 + 0.25 * i / digits
+                        ? final[i] : (char)('0' + Random.Shared.Next(10));
+                display = new string(characters);
+            }
             var interval = settings.TickMilliseconds * (1 + 3 * Math.Pow(progress, 3));
-            ShowDigits(new string(display), true, interval);
+            ShowDigits(display, true, interval);
             var options = soundOptions();
             sound.Tick(options.Volume, options.Muted);
             await WaitAsync(TimeSpan.FromMilliseconds(Math.Max(1,

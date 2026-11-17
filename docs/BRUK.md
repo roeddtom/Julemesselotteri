@@ -57,8 +57,10 @@ Gevinster som ikke ble trukket, blir ikke loggført som utdelt.
 3. Registrer usolgte globale loddnummer, for eksempel `12-18, 83`.
    Komma, semikolon, mellomrom og linjeskift kan skille intervallene.
 4. Kontroller antall ledige nummer. Velg **Start boklotteri**.
-5. Trekk hver gevinst. Appen viser først boknummeret, venter den innstilte pausen
-   og animerer deretter det globale loddnummeret. **Vis nå** avslutter hele
+5. Trekk hver gevinst. Appen viser først boknummeret med bokas nummerintervall,
+   for eksempel **Bok 2 · Lodd 51–100**, venter den innstilte pausen og animerer
+   deretter bare loddnummer i denne boka som er innenfor arrangementets intervall,
+   solgt og ikke allerede trukket i runden. **Vis nå** avslutter hele
    sekvensen, også hvis bokdelen eller pausen fortsatt pågår.
    Slå opp navn/telefon i papirboka; opplysningene skal ikke legges inn i appen.
 6. Avslutt runden etter siste gevinst. Bokvinnere beholdes som utelukket i hele
