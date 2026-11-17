@@ -24,6 +24,7 @@ public partial class AudienceWindow : Window
         if (winners.Length > 0) PublicWinners.ScrollIntoView(winners[0]);
         WinnerCountText.Text = $"{winners.Length} av {round.Prizes.Count} gevinster";
         if (IsAnimating) return;
+        SetReelMode(round.Mode);
         var last = round.Draws.LastOrDefault(d => d.RevealedAt is not null);
         var showResult = round.PendingDraw is null && last is not null;
         var showBook = bookAnimationEnabled && round.Mode == LotteryMode.Books && round.PendingDraw is null && last is not null;
@@ -52,6 +53,7 @@ public partial class AudienceWindow : Window
         {
             PrizeText.Text = draw.Prize;
             PrizeView.Visibility = Visibility.Visible;
+            SetReelMode(round.Mode);
             VirtualBook.Visibility = Visibility.Collapsed;
             ReelsView.Visibility = Visibility.Visible;
             BookText.Text = "";
@@ -113,6 +115,16 @@ public partial class AudienceWindow : Window
 
     private static string BookLabel(DrawRecord draw) =>
         $"Bok {draw.Book} · Lodd {(draw.Book - 1) * 50 + 1}–{draw.Book * 50}";
+
+    private void SetReelMode(LotteryMode mode)
+    {
+        var hearts = mode == LotteryMode.Hearts;
+        HeartFrame.Visibility = hearts ? Visibility.Visible : Visibility.Collapsed;
+        ReelsView.Height = hearts ? 420 : 230;
+        SlotsView.Height = hearts ? 210 : 220;
+        SlotsView.Margin = hearts ? new Thickness(0, 0, 0, 100) : new Thickness(0);
+        BookText.Visibility = hearts ? Visibility.Collapsed : Visibility.Visible;
+    }
 
     private async Task SpinAsync(int result, int digits, AnimationSettings settings, DrawSound sound,
         Func<(int Volume, bool Muted)> soundOptions, CancellationToken token, int[] candidates)

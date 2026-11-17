@@ -10,6 +10,10 @@
   ikke trukket separat. Vinnertall brukes bare én gang per arrangement.
 - Hjertelodd: 1–1000, unike nummer innen runden. Samme hjerte kan vinne flere
   ganger via forskjellige nummer. Ny runde nullstiller nummer og beholder gevinster.
+  Publikum ser et stort vektorhjerte i profilens rødfarger rundt tromlene fra
+  trekningsstart og rundt det ferdige vinnertallet. Hjerte og tromler skaleres
+  sammen; alle fire sifre får plass innenfor hjertet. Boklodd beholder vanlig
+  trommelvisning, og nye runder viser fortsatt ikke tomme tromler.
 - Gevinster: én per linje, hovedgevinst øverst. Trekkes nedenfra og opp.
 - Én trekk-knapp. Separat hastighet og varighet per lotteri.
 - Nye runder skjuler gevinst og tomme talltromler til første trekning starter.
@@ -132,6 +136,8 @@ Det kontrollerer også sentrert tabell, forenklet vinnerside, fjernet slagord
 og automatisk rulling i vinnerlisten uten synlige rullefelt.
 Ny-runde-visning, stigende tall med omløp og utelatelser, nedbremsing,
 samlet trinntid, korrekt sluttall og `Vis nå` kontrolleres også uten vinduer.
+Hjerterammen kontrolleres ved trekningsstart og etter stopp, inkludert geometrisk
+plass til fire sifre, skjermgrenser og at boklodd ikke beholder hjertet.
 Det kan lagre et offscreen-bilde av oppslaget. Dette erstatter ikke full
 interaktiv skjermtest av plassering, operatørflyt og fysisk projektor.
 

@@ -38,6 +38,7 @@ internal static class Program
                 CheckBookletLayout(args.Skip(1).FirstOrDefault());
                 CheckAudienceLayout();
                 CheckIdleRoundAndSpinPlan();
+                CheckHeartFrame(args.Skip(1).FirstOrDefault());
                 CheckBookTicketAnimation();
                 CheckAnimationSpeed();
                 Console.WriteLine("PASS: portrait booklet layout, ticket mapping and reel animations; no windows shown.");
@@ -216,6 +217,7 @@ internal static class Program
             CheckBookletLayout();
             CheckAudienceLayout();
             CheckIdleRoundAndSpinPlan();
+            CheckHeartFrame();
             CheckAudio();
             Console.WriteLine("PASS: animation stages/timing, reveal-now, safe cancellation/end/restart, rounds, logs and audio.");
             return 0;
@@ -460,6 +462,9 @@ internal static class Program
                     Control<TextBlock>(audience, "PrizeText").Text == draw.Prize &&
                     Control<Viewbox>(audience, "ReelsView").Visibility == Visibility.Visible,
                     "Prize and reels appear only when drawing starts");
+                Check(Control<System.Windows.Shapes.Path>(audience, "HeartFrame").Visibility ==
+                    (mode == LotteryMode.Hearts ? Visibility.Visible : Visibility.Collapsed),
+                    "Only heart lottery draws frame the slot numbers with a heart");
                 audience.RevealNow();
                 WaitUntil(() => animation.IsCompleted, "Reveal-now bypasses the ascending animation");
                 animation.GetAwaiter().GetResult();
@@ -487,6 +492,44 @@ internal static class Program
                 }
             }
         }
+    }
+
+    private static void CheckHeartFrame(string? screenshotDirectory = null)
+    {
+        var audience = new AudienceWindow();
+        try
+        {
+            var draw = new DrawRecord { Number = 1000, Prize = "Hovedgevinst", RevealedAt = DateTimeOffset.Now };
+            var round = new LotteryRound { Mode = LotteryMode.Hearts, Books = new(), Prizes = [draw.Prize], Draws = [draw] };
+            audience.UpdateRound(round);
+            var content = (FrameworkElement)audience.Content;
+            content.Measure(new Size(1600, 900));
+            content.Arrange(new Rect(0, 0, 1600, 900));
+            content.UpdateLayout();
+            var heart = Control<System.Windows.Shapes.Path>(audience, "HeartFrame");
+            var slots = Control<Viewbox>(audience, "SlotsView");
+            Check(heart.Visibility == Visibility.Visible && audience.DisplayedNumber == "1000",
+                "The heart remains around the completed winning number");
+            foreach (var corner in new[] { new Point(), new Point(slots.ActualWidth, 0),
+                new Point(0, slots.ActualHeight), new Point(slots.ActualWidth, slots.ActualHeight) })
+            {
+                Check(heart.RenderedGeometry.FillContains(slots.TranslatePoint(corner, heart)),
+                    "All four slot digits fit inside the heart outline");
+            }
+            var topLeft = heart.TranslatePoint(new Point(), content);
+            var bottomRight = heart.TranslatePoint(new Point(heart.ActualWidth, heart.ActualHeight), content);
+            Check(topLeft.X >= 0 && topLeft.Y >= 0 && bottomRight.X <= content.ActualWidth &&
+                bottomRight.Y <= content.ActualHeight, "Heart fits within the public display");
+            if (screenshotDirectory is not null)
+            {
+                Directory.CreateDirectory(screenshotDirectory);
+                SaveScreenshot(content, Path.Combine(screenshotDirectory, "audience-hearts.png"));
+            }
+            audience.UpdateRound(new LotteryRound { Mode = LotteryMode.Books, Books = new(), Prizes = [draw.Prize], Draws = [draw] });
+            Check(heart.Visibility == Visibility.Collapsed, "Book lottery does not retain the heart decoration");
+            Check(!audience.IsVisible, "Heart layout checks never display the window");
+        }
+        finally { audience.Close(); }
     }
 
     private static void CheckBookletRows()

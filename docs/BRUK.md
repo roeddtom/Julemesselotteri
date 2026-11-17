@@ -48,6 +48,10 @@ Ugyldige felt må rettes før en ny runde kan startes.
 
 ## Hjertelodd
 
+Når trekningen starter, vises et stort rødt hjerte rundt talltromlene.
+Hjertet beholdes rundt vinnertallet etter stopp. Det vises ikke rundt boklodd
+eller som tomme tromler før første trekning.
+
 1. Velg **Ny hjerterunde**. Gevinstlisten låses for runden.
 2. Velg **Trekk neste gevinst** for hver gevinst. Tromlene viser vinneren når
    animasjonen er ferdig; **Vis nå** hopper direkte til resultatet.
