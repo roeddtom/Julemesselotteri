@@ -36,6 +36,8 @@ Publikumsvinduet har ingen bunntekst med slagord. Vinnerlisten viser ikke
 rullefelt; den oppdateres automatisk med nyeste vinner øverst.
 Overskriftene øverst til høyre, «Nå trekker vi» og «Gratulerer» nederst er
 fjernet for en roligere vinnervisning. Logoen og vinnerlisten beholdes.
+Ved starten av en ny runde skjules gevinst og talltromler fram til første
+trekning starter. Etter en trekning beholdes siste vinner som før.
 
 ## Gevinster
 
@@ -131,14 +133,16 @@ Under **Visning og lyd** har hvert lotteri egne innstillinger:
   loddbok kommer forside og sidevending i tillegg etter at tallet er avslørt
   (omtrent 1,7–2,9 sekunder, inkludert et kort opphold med vinnertallet synlig).
 - Tallbytte: 30–500 millisekunder. Lavere verdi gir raskere tromler.
-  Tromlene sakker gradvis av mot slutten uten å endre valgt vinner.
+  Hele nummer ruller i stigende rekkefølge og starter på nytt fra begynnelsen
+  av utvalget ved behov. Utelatte lodd hoppes over. Tromlene sakker gradvis av
+  og stopper på den lagrede vinneren, uten et tilfeldig hopp til slutt.
 - Bokpause: 0–30 sekunder mellom ferdig boknummer og loddnummer.
 - Volum: 0–100. Bruk **Lydløs** for å stoppe lyd umiddelbart.
   Volumendringer brukes på neste lydsignal; de kan gjøres mens trekningen pågår.
 - **Test lyd** spiller vinnersignalet med valgt volum/lydløs når ingen animasjon pågår.
 
 Tidsendringer gjelder neste trekning. Vinnertallet bestemmes og lagres før
-animasjonen; de tilfeldige sifrene underveis påvirker ikke utfallet.
+animasjonen; den stigende tallsekvensen underveis påvirker ikke utfallet.
 Ingen ekstern musikk eller nettforbindelse brukes. Windows må ha en fungerende
 lydutgang; sjekk også Windows-volum, programvolum og eventuell HDMI-lydutgang.
 

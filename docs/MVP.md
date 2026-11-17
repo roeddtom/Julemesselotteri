@@ -12,6 +12,15 @@
   ganger via forskjellige nummer. Ny runde nullstiller nummer og beholder gevinster.
 - Gevinster: én per linje, hovedgevinst øverst. Trekkes nedenfra og opp.
 - Én trekk-knapp. Separat hastighet og varighet per lotteri.
+- Nye runder skjuler gevinst og tomme talltromler til første trekning starter.
+  Et ferdig resultat beholdes fram til neste trekning eller avsluttet runde.
+- Tallanimasjonen går gjennom hele nummer i stigende rekkefølge med omløp.
+  Rekkefølgen planlegges baklengs fra den allerede lagrede vinneren, slik at
+  siste animasjonstrinn er vinneren. Økende trinnvarighet gir gradvis nedbremsing;
+  summen av trinntidene er den konfigurerte varigheten. Sifferbevegelsen følger
+  trinntiden også ved langsom rulling. Dette endrer ikke vinnersjansene.
+  Hjertelodd hopper over rundens tidligere vinnere, og boklodd bruker fortsatt
+  bare kvalifiserte lodd i den trukne boka.
 - Boklodd viser bok først, pause, deretter globalt loddnummer. Ingen radnummer.
 - Etter bokvisning står bokas fulle 50-nummersintervall ved boknummeret, også
   under og etter loddvisning. Animasjonen velger hele lodd fra den aktuelle boka,
@@ -121,6 +130,8 @@ sidebredder, tabelltekstens plass, innebygde radbilder, kolonnedekning,
 stabile radbilder ved sidevending og tallanimasjoner uten å vise vinduer.
 Det kontrollerer også sentrert tabell, forenklet vinnerside, fjernet slagord
 og automatisk rulling i vinnerlisten uten synlige rullefelt.
+Ny-runde-visning, stigende tall med omløp og utelatelser, nedbremsing,
+samlet trinntid, korrekt sluttall og `Vis nå` kontrolleres også uten vinduer.
 Det kan lagre et offscreen-bilde av oppslaget. Dette erstatter ikke full
 interaktiv skjermtest av plassering, operatørflyt og fysisk projektor.
 

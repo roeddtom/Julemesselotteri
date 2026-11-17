@@ -51,7 +51,7 @@ public sealed class DigitReel : Border
         previousTransform.Y = 0;
         currentTransform.Y = 0;
         if (!animate) return;
-        var duration = TimeSpan.FromMilliseconds(Math.Clamp(interval * 0.85, 25, 250));
+        var duration = TimeSpan.FromMilliseconds(Math.Max(1, interval * 0.85));
         var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
         previousTransform.BeginAnimation(TranslateTransform.YProperty,
             new DoubleAnimation(0, 220, duration) { EasingFunction = easing });

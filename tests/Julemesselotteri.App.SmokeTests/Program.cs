@@ -37,6 +37,7 @@ internal static class Program
                 CheckBookletRows();
                 CheckBookletLayout(args.Skip(1).FirstOrDefault());
                 CheckAudienceLayout();
+                CheckIdleRoundAndSpinPlan();
                 CheckBookTicketAnimation();
                 CheckAnimationSpeed();
                 Console.WriteLine("PASS: portrait booklet layout, ticket mapping and reel animations; no windows shown.");
@@ -214,6 +215,7 @@ internal static class Program
             CheckBookletRows();
             CheckBookletLayout();
             CheckAudienceLayout();
+            CheckIdleRoundAndSpinPlan();
             CheckAudio();
             Console.WriteLine("PASS: animation stages/timing, reveal-now, safe cancellation/end/restart, rounds, logs and audio.");
             return 0;
@@ -436,6 +438,57 @@ internal static class Program
         audience.Close();
     }
 
+    private static void CheckIdleRoundAndSpinPlan()
+    {
+        var audience = new AudienceWindow();
+        using var sound = new DrawSound();
+        try
+        {
+            foreach (var mode in new[] { LotteryMode.Hearts, LotteryMode.Books })
+            {
+                var round = new LotteryRound { Mode = mode, Books = new(), Prizes = ["Skjult gevinst"] };
+                audience.UpdateRound(round, true);
+                Check(Control<Viewbox>(audience, "PrizeView").Visibility == Visibility.Collapsed &&
+                    Control<TextBlock>(audience, "PrizeText").Text == "", "New round does not expose the first prize");
+                Check(Control<Viewbox>(audience, "ReelsView").Visibility == Visibility.Collapsed &&
+                    audience.DisplayedNumber == "", "New round does not show empty number reels");
+                var draw = new DrawRecord { Number = 73, Prize = round.Prizes[0] };
+                var animation = audience.PlayAsync(round, draw,
+                    new() { DurationSeconds = 10, TickMilliseconds = 30, BookPauseSeconds = 0 },
+                    sound, () => (0, true), CancellationToken.None);
+                Check(Control<Viewbox>(audience, "PrizeView").Visibility == Visibility.Visible &&
+                    Control<TextBlock>(audience, "PrizeText").Text == draw.Prize &&
+                    Control<Viewbox>(audience, "ReelsView").Visibility == Visibility.Visible,
+                    "Prize and reels appear only when drawing starts");
+                audience.RevealNow();
+                WaitUntil(() => animation.IsCompleted, "Reveal-now bypasses the ascending animation");
+                animation.GetAwaiter().GetResult();
+                Check(audience.DisplayedNumber == "73", "Reveal-now still shows the saved winner");
+            }
+        }
+        finally { audience.Close(); }
+
+        foreach (var candidates in new[] { new[] { 1 }, new[] { 51, 53, 56, 100 }, Enumerable.Range(1, 1000).ToArray() })
+        {
+            foreach (var result in new[] { candidates[0], candidates[^1] }.Distinct())
+            {
+                var settings = new AnimationSettings { DurationSeconds = 0.6, TickMilliseconds = 30 };
+                var frames = AudienceWindow.PlanSpin(result, candidates, settings);
+                Check(frames[^1].Number == result, "Ascending reel plan stops on the saved winner without a final jump");
+                Check(Math.Abs(frames.Sum(frame => frame.Milliseconds) - 600) < 0.01,
+                    "Reel plan preserves the configured duration");
+                for (var index = 1; index < frames.Length; index++)
+                {
+                    var previous = Array.IndexOf(candidates, frames[index - 1].Number);
+                    Check(frames[index].Number == candidates[(previous + 1) % candidates.Length],
+                        "Frames advance in eligible ascending order, wrapping and skipping excluded tickets");
+                    Check(frames[index].Milliseconds > frames[index - 1].Milliseconds,
+                        "Each successive frame slows before the winner");
+                }
+            }
+        }
+    }
+
     private static void CheckBookletRows()
     {
         var booklet = new BookletView();
@@ -608,7 +661,7 @@ internal static class Program
             var first = (book - 1) * 50 + 1;
             var last = book * 50;
             var excluded = number == first ? first + 1 : first;
-            var previous = number == last ? last - 1 : Math.Min(last, 125);
+            var previous = number == Math.Min(last, 125) ? number - 1 : Math.Min(last, 125);
             var round = new LotteryRound
             {
                 Mode = LotteryMode.Books,
@@ -621,6 +674,9 @@ internal static class Program
                 ]
             };
             var frames = 0;
+            var expectedFrames = AudienceWindow.PlanSpin(number,
+                TicketRules.EligibleBooks(round.Books, [previous]).Where(n => n >= first && n <= last).ToArray(),
+                new() { DurationSeconds = 0.5, TickMilliseconds = 30, BookPauseSeconds = 0 });
             var animation = audience.PlayAsync(round, draw,
                 new() { DurationSeconds = 0.5, TickMilliseconds = 30, BookPauseSeconds = 0 },
                 sound, () =>
@@ -628,6 +684,7 @@ internal static class Program
                     if (audience.DisplayedStage == "LODDNUMMER")
                     {
                         var shown = int.Parse(audience.DisplayedNumber);
+                        Check(shown == expectedFrames[frames].Number, "Live ticket frames follow the ascending reel plan");
                         Check(shown >= first && shown <= last && shown <= 125, "Animated tickets stay inside the drawn book and event range");
                         Check(shown != excluded && shown != previous, "Animated tickets exclude unsold tickets and earlier winners");
                         Check(Control<TextBlock>(audience, "BookText").Text == $"Bok {book} · Lodd {first}–{last}",
