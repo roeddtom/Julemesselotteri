@@ -6,10 +6,16 @@ Operatøren styrer trekningen på PC-en; publikum ser et separat projektorvindu.
 Avklarte krav og iterasjonsplan: [MVP](docs/MVP.md).
 Veiledning og arrangementssjekkliste: [Bruk](docs/BRUK.md).
 
-**Status:** MVP med animert vinnervisning i et varmt juletema, lokal lyd og
+**Status:** MVP med animert vinnervisning i Ungdomssenterets visuelle profil, lokal lyd og
 separate operatør-/publikumsvinduer. Boklotteriet viser bok først, deretter
 loddnummer, med justerbar pause. Hvert lotteri har egen hastighet og varighet;
 operatøren kan vise vinneren straks eller avslutte runden.
+
+Begge vinduer følger designmanualen i `design`: mørk rød, rød og krem,
+geometriske dekorelementer og den uendrede Ungdomssenteret-logoen. Typografien
+bruker lokalt installert Rebond Grotesque, Work Sans eller manualens systemreserve
+Arial. Logoen er innebygd i appen; designmappen trenger ikke følge med
+den portable utgaven.
 
 ## Utvikling
 

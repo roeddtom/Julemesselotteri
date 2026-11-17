@@ -39,6 +39,7 @@ internal static class Program
             window.Show();
             Pump();
             Check(window.IsVisible, "Operator window opens");
+            CheckLogo(window);
             Check(!Control<Button>(window, "DrawButton").IsEnabled, "Draw disabled without round");
             Control<TextBox>(window, "FirstTicketBox").Text = "ugyldig";
             try
@@ -52,6 +53,7 @@ internal static class Program
             Check(!Control<StackPanel>(window, "LotterySetup").IsEnabled, "Lottery setup locked");
             Check(app.Windows.OfType<AudienceWindow>().Count() == 1, "Separate audience window opens");
             var audience = app.Windows.OfType<AudienceWindow>().Single();
+            CheckLogo(audience);
             var earlyReveal = Stopwatch.StartNew();
             Click(window, "DrawButton");
             var selected = engine.State.ActiveRound!.PendingDraw
@@ -104,6 +106,14 @@ internal static class Program
                 Directory.CreateDirectory(args[0]);
                 SaveScreenshot(window, Path.Combine(args[0], "operator.png"));
                 SaveScreenshot(audience, Path.Combine(args[0], "audience.png"));
+                var previousWidth = window.Width;
+                var previousHeight = window.Height;
+                window.Width = window.MinWidth;
+                window.Height = window.MinHeight;
+                Pump();
+                SaveScreenshot(window, Path.Combine(args[0], "operator-small.png"));
+                window.Width = previousWidth;
+                window.Height = previousHeight;
             }
             Click(window, "EndRoundButton");
             window.Close();
@@ -220,6 +230,15 @@ internal static class Program
         encoder.Frames.Add(BitmapFrame.Create(image));
         using var output = File.Create(path);
         encoder.Save(output);
+    }
+
+    private static void CheckLogo(FrameworkElement window)
+    {
+        var image = Control<Image>(window, "BrandLogo");
+        Check(image.Source is BitmapSource { PixelWidth: > 0, PixelHeight: > 0 },
+            "Supplied logo loads from embedded app resources");
+        Check(image.Stretch == Stretch.Uniform && image.Opacity == 1,
+            "Logo preserves proportions and remains opaque");
     }
 
     private static void CheckDisplayPlacement()

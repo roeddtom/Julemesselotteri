@@ -16,10 +16,10 @@ public sealed class DigitReel : Border
         Width = 152;
         Height = 220;
         Margin = new Thickness(5, 0, 5, 0);
-        CornerRadius = new CornerRadius(14);
-        BorderThickness = new Thickness(1);
-        BorderBrush = new SolidColorBrush(Color.FromArgb(110, 231, 197, 128));
-        Background = new LinearGradientBrush(Color.FromRgb(45, 70, 56), Color.FromRgb(20, 43, 35), 90);
+        CornerRadius = new CornerRadius(4);
+        BorderThickness = new Thickness(0, 0, 0, 6);
+        BorderBrush = (Brush)Application.Current.FindResource("Accent");
+        Background = (Brush)Application.Current.FindResource("BrandCream");
         var slot = new Grid { ClipToBounds = true, Margin = new Thickness(0, 4, 0, 4) };
         slot.Children.Add(_previous);
         slot.Children.Add(_current);
@@ -28,10 +28,10 @@ public sealed class DigitReel : Border
 
     private static TextBlock CreateNumber() => new()
     {
-        FontFamily = new FontFamily("Segoe UI"),
+        FontFamily = (FontFamily)Application.Current.FindResource("BrandFont"),
         FontSize = 148,
         FontWeight = FontWeights.Bold,
-        Foreground = new SolidColorBrush(Color.FromRgb(255, 227, 166)),
+        Foreground = (Brush)Application.Current.FindResource("BrandDark"),
         HorizontalAlignment = HorizontalAlignment.Center,
         VerticalAlignment = VerticalAlignment.Center,
         RenderTransform = new TranslateTransform()

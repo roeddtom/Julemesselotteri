@@ -68,6 +68,29 @@ runde. Gevinstmengden kan ikke overstige tilgjengelige lodd. Øvre grense er
   i `artifacts\win-x64`. Ingen nettbaserte ressurser, mediefiler eller skrifter
   lastes ned ved kjøring. Lydene syntetiseres lokalt.
 
+## Visuell profil
+
+Begge vinduer følger den medfølgende
+`design\design_manual_misjonssambandet_versjon_1.3.pdf`.
+Logoen fra `design\ungdomssenteret_logo.png` er innebygd uendret som WPF-ressurs.
+Den står venstrestilt på mørk rød bakgrunn, med luft rundt, opprinnelige
+proporsjoner og full opasitet (manualens sider 6–10). Ingen omfarging,
+skygge, rotasjon eller andre effekter påføres logoen.
+
+Felles farger er mørk rød `#420024`, rød `#FF004A`, dyp rød `#AB0038`,
+krem `#F0ECD9`, mørk grå `#383838` og nøytral kant `#C1BFB1` (side 20).
+Små opplysninger i vinnerlisten og operatørens statusfelt har mørk tekst på lys
+bakgrunn. Store vinnertall har mørk rød tekst på krem. Ringer og kvartbuer
+erstatter julepynt og gradienter, inspirert av formelementene på sidene 24–25.
+Den separate ung-paletten er ikke brukt.
+
+Skriftrekkefølgen er Rebond Grotesque, Work Sans, Arial (sidene 14–18).
+Ingen lisensierte skrifter er kopiert fra PDF-en eller lastet ned.
+Når profilskriftene ikke er installert, brukes Arial, slik manualen tillater.
+Operatørens høyre panel kan rulles på små vinduer slik at kontroller ikke skjules.
+Skjermtesten åpner begge vinduer, kontrollerer innebygd logo og lagrer valgfrie
+skjermbilder, også med minste operatørstørrelse.
+
 ## Verifikasjon og versjonskontroll
 
 Trekkmotoren har 29 automatiserte testtilfeller. En separat WPF-skjermtest bruker

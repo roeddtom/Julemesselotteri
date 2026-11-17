@@ -3,6 +3,11 @@
 MVP for hjertelodd og boklodd med animert vinnervisning og lyd.
 Test med de faktiske skjermene før programmet brukes på et arrangement.
 
+Begge vinduer bruker Ungdomssenterets logo og fargeprofil fra designmanualen.
+Logoen følger med innebygd, også ved frakoblet drift. Profilskriftene Rebond
+Grotesque og Work Sans brukes hvis de finnes på PC-en; ellers brukes Arial
+som manualens systemreserve. Ingen ekstra skrifter må installeres.
+
 ## Starte
 
 1. Pakk ut hele den portable mappen på en Windows 10/11 x64-PC. Ikke flytt bare EXE-filen.

@@ -3,14 +3,21 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              ShutdownMode="OnMainWindowClose">
     <Application.Resources>
-        <SolidColorBrush x:Key="Ink" Color="#172D29"/>
-        <SolidColorBrush x:Key="MutedInk" Color="#52645E"/>
-        <SolidColorBrush x:Key="Accent" Color="#16634F"/>
+        <FontFamily x:Key="BrandFont">Rebond Grotesque, Work Sans, Arial</FontFamily>
+        <SolidColorBrush x:Key="Ink" Color="#383838"/>
+        <SolidColorBrush x:Key="MutedInk" Color="#420024"/>
+        <SolidColorBrush x:Key="Accent" Color="#AB0038"/>
+        <SolidColorBrush x:Key="BrandDark" Color="#420024"/>
+        <SolidColorBrush x:Key="BrandRed" Color="#FF004A"/>
+        <SolidColorBrush x:Key="BrandCream" Color="#F0ECD9"/>
+        <SolidColorBrush x:Key="BrandBorder" Color="#C1BFB1"/>
+        <BitmapImage x:Key="YouthCentreLogo"
+                     UriSource="pack://application:,,,/Julemesselotteri.App;component/Assets/ungdomssenteret_logo.png"/>
         <Style TargetType="Window">
-            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontFamily" Value="{StaticResource BrandFont}"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Foreground" Value="{StaticResource Ink}"/>
-            <Setter Property="Background" Value="#F3F4EF"/>
+            <Setter Property="Background" Value="{StaticResource BrandCream}"/>
         </Style>
         <Style TargetType="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap"/>
@@ -23,21 +30,21 @@
         <Style TargetType="TextBox">
             <Setter Property="Padding" Value="10,8"/>
             <Setter Property="Margin" Value="0,2,0,10"/>
-            <Setter Property="BorderBrush" Value="#C9D2CB"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BrandBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
         <Style TargetType="Button">
             <Setter Property="Padding" Value="16,10"/>
             <Setter Property="Margin" Value="0,4,8,4"/>
-            <Setter Property="Background" Value="#E2E9E1"/>
-            <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+            <Setter Property="Background" Value="{StaticResource BrandCream}"/>
+            <Setter Property="Foreground" Value="{StaticResource BrandDark}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Surface" Background="{TemplateBinding Background}" CornerRadius="7"
+                        <Border x:Name="Surface" Background="{TemplateBinding Background}" CornerRadius="4"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -55,7 +62,7 @@
         </Style>
         <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
             <Setter Property="Background" Value="{StaticResource Accent}"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource BrandCream}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
         <Style TargetType="TabItem">
