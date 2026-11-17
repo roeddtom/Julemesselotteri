@@ -27,6 +27,7 @@ public sealed record AppSettings
     public int Volume { get; init; } = 50;
     public bool Muted { get; init; }
     public string DisplayDevice { get; init; } = "";
+    public bool BookAnimationEnabled { get; init; }
 }
 
 public sealed class DrawRecord

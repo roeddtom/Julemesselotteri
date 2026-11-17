@@ -11,6 +11,10 @@ separate operatør-/publikumsvinduer. Boklotteriet viser bok først, deretter
 loddnummer, med justerbar pause. Hvert lotteri har egen hastighet og varighet;
 operatøren kan vise vinneren straks eller avslutte runden.
 
+Et valgfritt eksempel med virtuell loddbok kan slås på under **Visning og lyd**:
+forsiden kommer fram, boka åpnes og riktig ti-raders side og vinnerrad markeres.
+Valget er avslått som standard og påvirker ikke hjertelodd.
+
 Begge vinduer følger designmanualen i `design`: mørk rød, rød og krem,
 geometriske dekorelementer og den uendrede Ungdomssenteret-logoen. Typografien
 bruker lokalt installert Rebond Grotesque, Work Sans eller manualens systemreserve

@@ -74,6 +74,24 @@ runde. Gevinstmengden kan ikke overstige tilgjengelige lodd. Øvre grense er
 
 ## Visuell profil
 
+### Valgfri virtuell loddbok
+
+Et eksempel kan aktiveres under **Visning og lyd** med
+**Vis animert loddbok (eksempel)**. Innstillingen lagres, er avslått som standard
+og leses ved starten av neste trekning. Den medfølgende `design\Forside loddbok.png`
+er innebygd som forside. PDF-en `design\BookLottery_2026_Book_number_1.pdf`
+er referanse for ti-raders tabeller, ikke et dokument som må rendres ved kjøring.
+Programmet viser en stilisert bokåpning og sidevending, ikke fysisk papirkurl.
+Forsidens boknummer/intervall og sluttmarkering genereres dynamisk.
+Det rekonstruerte oppslaget viser en informasjonsside og aktuell tabellside,
+ikke en nøyaktig gjengivelse av duplex-arkenes trykkoppsett.
+
+Valgt vinner, lagring, bokpause, tidsinnstillinger, avbrytelse og omstart bruker
+samme trekkmotor som før. `Vis nå` og gjenopptatt vinner viser riktig side/rad.
+Tabellsider beregnes fra fem grupper med ti nummer per bok, også ved
+bokgrenser og lodd 4000 i bok 80. Skjermtesten dekker på/av, lagring av valget,
+forside, vinnerrad, sidemapping og gjenoppretting med funksjonen på.
+
 Begge vinduer følger den medfølgende
 `design\design_manual_misjonssambandet_versjon_1.3.pdf`.
 Logoen fra `design\ungdomssenteret_logo.png` er innebygd uendret som WPF-ressurs.

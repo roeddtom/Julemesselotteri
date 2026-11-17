@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Julemesselotteri.Core\Julemesselotteri.Core.csproj" />
     <Resource Include="..\..\design\ungdomssenteret_logo.png" Link="Assets\ungdomssenteret_logo.png" />
+    <Resource Include="..\..\design\Forside loddbok.png" Link="Assets\book-cover.png" />
   </ItemGroup>
 
   <PropertyGroup>

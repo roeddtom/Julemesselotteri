@@ -83,6 +83,8 @@
                             <TextBlock Text="Tid mellom tallbytter (ms) · lavere er raskere" Style="{StaticResource Caption}"/>
                             <TextBox x:Name="HeartSpeedBox" TextChanged="SettingsChanged"/>
                             <TextBlock Text="Boklodd" FontSize="19" FontWeight="SemiBold" Margin="0,12,0,0"/>
+                            <CheckBox x:Name="BookAnimationBox" Content="Vis animert loddbok (eksempel)"
+                                      Checked="SettingsChanged" Unchecked="SettingsChanged"/>
                             <TextBlock Text="Varighet per del: bok og loddnummer (sekunder)" Style="{StaticResource Caption}"/>
                             <TextBox x:Name="BookDurationBox" TextChanged="SettingsChanged"/>
                             <TextBlock Text="Tid mellom tallbytter (ms)" Style="{StaticResource Caption}"/>

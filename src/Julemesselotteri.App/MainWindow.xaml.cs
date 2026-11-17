@@ -50,6 +50,7 @@ public partial class MainWindow : Window
         BookDurationBox.Text = s.BooksAnimation.DurationSeconds.ToString();
         BookSpeedBox.Text = s.BooksAnimation.TickMilliseconds.ToString();
         BookPauseBox.Text = s.BooksAnimation.BookPauseSeconds.ToString();
+        BookAnimationBox.IsChecked = s.BookAnimationEnabled;
         VolumeSlider.Value = s.Volume;
         MutedBox.IsChecked = s.Muted;
         RefreshDisplays(s.DisplayDevice);
@@ -101,6 +102,7 @@ public partial class MainWindow : Window
                 },
                 Volume = (int)VolumeSlider.Value,
                 Muted = MutedBox.IsChecked == true,
+                BookAnimationEnabled = BookAnimationBox.IsChecked == true,
                 DisplayDevice = (DisplayBox.SelectedItem as DisplayInfo)?.Device ?? ""
             };
             if (next != current) _engine.SaveSettings(next);
@@ -204,7 +206,8 @@ public partial class MainWindow : Window
             _drawing = true;
             Render();
             await _audience!.PlayAsync(round, draw, round.Mode == LotteryMode.Hearts
-                ? settings.HeartsAnimation : settings.BooksAnimation, _sound, SoundOptions, cancellation.Token);
+                ? settings.HeartsAnimation : settings.BooksAnimation, _sound, SoundOptions, cancellation.Token,
+                settings.BookAnimationEnabled);
             cancellation.Token.ThrowIfCancellationRequested();
             _engine.RevealWinner();
             SyncLogs();
@@ -282,7 +285,7 @@ public partial class MainWindow : Window
             Activate();
         }
         DisplayManager.Place(_audience, _engine.State.Settings.DisplayDevice);
-        _audience.UpdateRound(_engine.State.ActiveRound);
+        _audience.UpdateRound(_engine.State.ActiveRound, _engine.State.Settings.BookAnimationEnabled);
     }
 
     private void CloseAudience()
@@ -316,7 +319,7 @@ public partial class MainWindow : Window
             .Select(d => new WinnerItem(d.Prize, round.Mode == LotteryMode.Books
                 ? $"Lodd {d.Number} · Bok {d.Book}" : $"Lodd {d.Number}")).ToArray();
         EligibilityText.Text = $"Boklodd: {_engine.EligibleCount(LotteryMode.Books)} ledige nummer etter utelatelser og tidligere vinnere.";
-        _audience?.UpdateRound(round);
+        _audience?.UpdateRound(round, state.Settings.BookAnimationEnabled);
     }
 
     private void NewEvent_Click(object sender, RoutedEventArgs e)

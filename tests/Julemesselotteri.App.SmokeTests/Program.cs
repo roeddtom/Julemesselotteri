@@ -88,19 +88,30 @@ internal static class Program
             DrawAndWait(window, engine);
             Click(window, "EndRoundButton");
             Check(!app.Windows.OfType<AudienceWindow>().Any(), "End round closes audience");
+            Control<TabControl>(window, "SetupTabs").SelectedIndex = 1;
+            Pump();
+            Check(Control<CheckBox>(window, "BookAnimationBox").IsVisible, "Book animation option is in display and sound tab");
+            Control<CheckBox>(window, "BookAnimationBox").IsChecked = true;
+            Control<TabControl>(window, "SetupTabs").SelectedIndex = 0;
             Click(window, "StartBooksButton");
+            Check(store.Load()!.Settings.BookAnimationEnabled, "Book animation option persists");
             audience = app.Windows.OfType<AudienceWindow>().Single();
             var bookDraw = Stopwatch.StartNew();
             Click(window, "DrawButton");
             Check(audience.DisplayedStage == "FØRST FINNER VI BOKA", "Book is animated first");
             WaitUntil(() => Control<TextBlock>(audience, "BookText").Text == "Bok 2 · Lodd 51–100", "Book and range revealed before ticket");
             Check(audience.DisplayedNumber == "02", "Book pause displays correct book");
+            var virtualBook = Control<BookletView>(audience, "VirtualBook");
+            Check(virtualBook.Visibility == Visibility.Visible && virtualBook.Page == 0,
+                "Virtual book cover appears after book selection");
             Check(engine.State.ActiveRound!.PendingDraw is not null, "Book reveal is not a complete ticket reveal");
             WaitUntil(() => audience.DisplayedStage == "LODDNUMMER", "Ticket follows book pause");
             WaitUntil(() => engine.State.ActiveRound!.PendingDraw is null, "Book draw finishes");
             Check(bookDraw.Elapsed.TotalSeconds >= 1.3, "Book stages include configured pause");
             Check(audience.DisplayedNumber == "73", "Global ticket shown, not local row");
             Check(Control<TextBlock>(window, "CurrentBook").Text == "Bok 2", "Book displayed with global ticket");
+            Check(virtualBook.Page == 3 && virtualBook.HighlightedNumber == 73,
+                "Virtual book opens to third table page and highlights ticket 73");
             if (args.Length > 0)
             {
                 Directory.CreateDirectory(args[0]);
@@ -127,6 +138,7 @@ internal static class Program
             window.Show();
             Pump();
             Check(Control<Button>(window, "DrawButton").Content.ToString() == "Fortsett trekning", "Recovery offered");
+            Check(Control<CheckBox>(window, "BookAnimationBox").IsChecked == true, "Book animation restored after restart");
             Click(window, "DrawButton");
             audience = app.Windows.OfType<AudienceWindow>().Single();
             WaitUntil(() => Control<TextBlock>(audience, "BookText").Text.StartsWith($"Bok {pending.Book} · Lodd "),
@@ -140,6 +152,8 @@ internal static class Program
             WaitUntil(() => recovered.State.ActiveRound?.PendingDraw is null, "Book reveal-now skips both stages");
             Check(recovered.State.ActiveRound!.Draws.Last().Id == pending.Id, "Same pending winner recovered");
             Check(recovered.State.ActiveRound.PendingDraw is null, "Recovery reveal persisted");
+            Check(Control<BookletView>(app.Windows.OfType<AudienceWindow>().Single(), "VirtualBook").HighlightedNumber == pending.Number,
+                "Reveal-now after recovery highlights the saved ticket row");
             Check(recoverySelections == 0, "Recovery never requests another random selection");
             Click(window, "EndRoundButton");
             Check(Directory.GetFiles(store.LogDirectory, "*.txt").Length == 4, "One TXT log per round");
@@ -162,6 +176,7 @@ internal static class Program
             Check(new LotteryEngine(store).SelectWinner().Id == interrupted, "Restart after operator close does not reroll");
             CheckAnimationSpeed();
             CheckBookTicketAnimation();
+            CheckBookletRows();
             CheckAudio();
             Console.WriteLine("PASS: animation stages/timing, reveal-now, safe cancellation/end/restart, rounds, logs and audio.");
             return 0;
@@ -323,6 +338,20 @@ internal static class Program
         audience.Close();
     }
 
+    private static void CheckBookletRows()
+    {
+        var booklet = new BookletView();
+        foreach (var number in new[] { 1, 10, 11, 20, 21, 30, 31, 40, 41, 50, 51, 73, 4000 })
+        {
+            var draw = new DrawRecord { Number = number, Prize = "Gevinst" };
+            booklet.ShowCover(draw, 80);
+            Check(booklet.Page == 0 && booklet.HighlightedNumber is null, "Cover resets prior highlighted row");
+            booklet.Reveal(draw);
+            Check(booklet.Page == (number - 1) % 50 / 10 + 1 && booklet.HighlightedNumber == number,
+                "Page and row mapping handles all table boundaries and book 80");
+        }
+    }
+
     private static void CheckBookTicketAnimation()
     {
         foreach (var number in new[] { 1, 50, 51, 100, 101, 125 })
@@ -366,6 +395,8 @@ internal static class Program
             animation.GetAwaiter().GetResult();
             Check(frames > 1, "Constrained ticket frames were checked");
             Check(audience.DisplayedNumber == number.ToString(), "Animation ends on the saved winner");
+            Check(Control<BookletView>(audience, "VirtualBook").Visibility == Visibility.Collapsed,
+                "Disabled option retains number-only animation");
             draw.RevealedAt = DateTimeOffset.Now;
             audience.UpdateRound(round);
             Check(Control<TextBlock>(audience, "BookText").Text == $"Bok {book} · Lodd {first}–{last}",
