@@ -14,6 +14,7 @@ operatøren kan vise vinneren straks eller avslutte runden.
 Et valgfritt eksempel med virtuell loddbok kan slås på under **Visning og lyd**:
 Etter at både bok og loddnummer er ferdig trukket, kommer forsiden fram,
 boka åpnes og riktig ti-raders side og vinnerrad markeres.
+Hver side har stående A5-proporsjoner, med samme bredde som forsiden.
 Valget er avslått som standard og påvirker ikke hjertelodd.
 
 Begge vinduer følger designmanualen i `design`: mørk rød, rød og krem,
@@ -37,6 +38,11 @@ testdata i en midlertidig mappe, ikke arrangementets data. Den kontrollerer ogs�
 animasjon, hastighet/varighet, bokpause, avbrudd, omstart og generert lyd.
 Appskjermbilder kan lagres med
 `dotnet run --project tests\Julemesselotteri.App.SmokeTests -- artifacts\ui-check`.
+
+Uten synlige vinduer kan boklayout, sidemapping og tallanimasjoner kontrolleres med:
+`dotnet run --project tests\Julemesselotteri.App.SmokeTests -- --headless-booklet artifacts\portrait-booklet`.
+Dette lagrer et bilde av bokoppslaget uten å åpne appvinduene; full skjermtest
+over er fortsatt nødvendig for skjermplassering og operatørflyt.
 
 Kjernen håndterer gevinster i omvendt rekkefølge, usolgte lodd, unike vinnere,
 atomisk lagring før visning og lesbare logger. Operatørvinduet har egne gevinstlister,

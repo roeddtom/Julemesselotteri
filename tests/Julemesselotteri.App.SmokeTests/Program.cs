@@ -22,6 +22,15 @@ internal static class Program
         SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
         try
         {
+            if (args.FirstOrDefault() == "--headless-booklet")
+            {
+                CheckBookletRows();
+                CheckBookletLayout(args.Skip(1).FirstOrDefault());
+                CheckBookTicketAnimation();
+                CheckAnimationSpeed();
+                Console.WriteLine("PASS: portrait booklet layout, ticket mapping and reel animations; no windows shown.");
+                return 0;
+            }
             CheckDisplayPlacement();
             var store = new EventFileStore(root, Path.Combine(root, "logs"));
             var engine = new LotteryEngine(store, _ => 0);
@@ -190,6 +199,7 @@ internal static class Program
             CheckAnimationSpeed();
             CheckBookTicketAnimation();
             CheckBookletRows();
+            CheckBookletLayout();
             CheckAudio();
             Console.WriteLine("PASS: animation stages/timing, reveal-now, safe cancellation/end/restart, rounds, logs and audio.");
             return 0;
@@ -363,6 +373,57 @@ internal static class Program
             Check(booklet.Page == (number - 1) % 50 / 10 + 1 && booklet.HighlightedNumber == number,
                 "Page and row mapping handles all table boundaries and book 80");
         }
+    }
+
+    private static void CheckBookletLayout(string? screenshotDirectory = null)
+    {
+        var booklet = new BookletView();
+        var draw = new DrawRecord { Number = 4000, Prize = "Gevinst" };
+        booklet.ShowCover(draw, 80);
+        var size = new Size(booklet.Width, booklet.Height);
+        booklet.Measure(size);
+        booklet.Arrange(new Rect(size));
+        booklet.UpdateLayout();
+        var cover = booklet.Children.OfType<Border>().Single(b =>
+            b.Child is Grid grid && grid.Children.OfType<Image>().Any());
+        Check(Math.Abs(cover.ActualHeight / cover.ActualWidth - 210.0 / 148) < 0.01,
+            "Cover has portrait A5 proportions");
+        booklet.Reveal(draw);
+        booklet.Measure(size);
+        booklet.Arrange(new Rect(size));
+        booklet.UpdateLayout();
+        var paper = booklet.Children.OfType<Border>().Single(b => b != cover);
+        var spread = (Grid)paper.Child;
+        Check(spread.ColumnDefinitions.Count == 2, "Open book has two pages");
+        foreach (var column in spread.ColumnDefinitions)
+        {
+            Check(column.ActualWidth <= cover.ActualWidth &&
+                cover.ActualWidth - column.ActualWidth <= 2, "Each open page matches the cover width");
+            Check(Math.Abs(paper.ActualHeight / column.ActualWidth - 210.0 / 148) < 0.02,
+                "Open pages retain portrait A5 proportions");
+        }
+        var table = spread.Children.OfType<StackPanel>().Single(p => Grid.GetColumn(p) == 1);
+        Check(table.ActualWidth < cover.ActualWidth && table.DesiredSize.Height <= paper.ActualHeight,
+            "Number table fits within one portrait page");
+        var rows = table.Children.OfType<StackPanel>().Single();
+        foreach (var row in rows.Children.Cast<Grid>().Prepend(table.Children.OfType<Grid>().Single()))
+        {
+            foreach (var cell in row.Children.Cast<Border>())
+            {
+                var text = (TextBlock)cell.Child;
+                var naturalText = new FormattedText(text.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                    new Typeface(text.FontFamily, text.FontStyle, text.FontWeight, text.FontStretch),
+                    text.FontSize, text.Foreground, 1);
+                Check(naturalText.Width + text.Padding.Left + text.Padding.Right <= cell.ActualWidth,
+                    $"Table text '{text.Text}' fits without clipping ({naturalText.Width + text.Padding.Left + text.Padding.Right:F1} <= {cell.ActualWidth:F1})");
+            }
+        }
+        if (screenshotDirectory is not null)
+        {
+            Directory.CreateDirectory(screenshotDirectory);
+            SaveScreenshot(booklet, Path.Combine(screenshotDirectory, "booklet-open.png"));
+        }
+        Check(Application.Current.Windows.Cast<Window>().All(w => !w.IsVisible), "Layout checks never show windows");
     }
 
     private static void CheckBookTicketAnimation()

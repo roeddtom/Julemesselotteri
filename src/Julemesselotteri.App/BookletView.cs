@@ -24,14 +24,15 @@ public sealed class BookletView : Grid
 
     public BookletView()
     {
-        Width = 850;
-        Height = 340;
+        const double pageWidth = 240;
+        Width = pageWidth * 2;
+        Height = pageWidth * 210 / 148;
         var ink = (Brush)Application.Current.FindResource("BrandDark");
         var cream = (Brush)Application.Current.FindResource("BrandCream");
         TextElement.SetForeground(this, ink);
         _cover = new Border
         {
-            Width = 280,
+            Width = pageWidth,
             Background = cream,
             Padding = new Thickness(10),
             RenderTransformOrigin = new Point(0, 0.5),
@@ -50,22 +51,21 @@ public sealed class BookletView : Grid
         _cover.Child = coverContent;
 
         var spread = new Grid();
-        spread.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(250) });
-        spread.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3) });
         spread.ColumnDefinitions.Add(new ColumnDefinition());
-        var summary = new StackPanel { Margin = new Thickness(20, 32, 24, 20) };
-        summary.Children.Add(new TextBlock { Text = "Julemesselotteri", FontSize = 25, FontWeight = FontWeights.Bold });
-        summary.Children.Add(new TextBlock { Text = "Takk for at du støtter\nUngdomssenteret", FontSize = 19, Margin = new Thickness(0, 18, 0, 20) });
+        spread.ColumnDefinitions.Add(new ColumnDefinition());
+        var summary = new StackPanel { Margin = new Thickness(20, 32, 20, 20) };
+        summary.Children.Add(new TextBlock { Text = "Julemesselotteri", FontSize = 20, FontWeight = FontWeights.Bold });
+        summary.Children.Add(new TextBlock { Text = "Takk for at du støtter\nUngdomssenteret", FontSize = 17, Margin = new Thickness(0, 18, 0, 20) });
         summary.Children.Add(_winner);
         spread.Children.Add(summary);
-        var spine = new Border { Background = (Brush)Application.Current.FindResource("BrandBorder") };
-        Grid.SetColumn(spine, 1);
+        var spine = new Border { Width = 2, HorizontalAlignment = HorizontalAlignment.Center, Background = (Brush)Application.Current.FindResource("BrandBorder") };
+        Grid.SetColumnSpan(spine, 2);
         spread.Children.Add(spine);
-        var table = new StackPanel { Margin = new Thickness(18, 10, 12, 8), RenderTransform = _turn, RenderTransformOrigin = new Point(0, 0.5) };
+        var table = new StackPanel { Margin = new Thickness(10), RenderTransform = _turn, RenderTransformOrigin = new Point(0, 0.5) };
         table.Children.Add(_pageLabel);
         table.Children.Add(CreateRow("Loddnr", "Navn", "Telefon", true));
         table.Children.Add(_rows);
-        Grid.SetColumn(table, 2);
+        Grid.SetColumn(table, 1);
         spread.Children.Add(table);
         _paper = new Border { Background = cream, Child = spread, BorderBrush = ink, BorderThickness = new Thickness(1) };
         Children.Add(_paper);
@@ -76,8 +76,9 @@ public sealed class BookletView : Grid
     private static Grid CreateRow(string ticket, string name, string phone, bool heading = false)
     {
         var grid = new Grid { Height = heading ? 24 : 25 };
-        foreach (var width in new[] { 70.0, 260, 140 })
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(width) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(50) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition());
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(70) });
         var values = new[] { ticket, name, phone };
         for (var i = 0; i < values.Length; i++)
         {
@@ -85,7 +86,7 @@ public sealed class BookletView : Grid
             {
                 BorderBrush = (Brush)Application.Current.FindResource("BrandBorder"),
                 BorderThickness = new Thickness(0, 0, 1, 1),
-                Child = new TextBlock { Text = values[i], FontSize = 17, Padding = new Thickness(6, 2, 0, 0), FontWeight = heading ? FontWeights.Bold : FontWeights.Normal }
+                Child = new TextBlock { Text = values[i], FontSize = 13, Padding = new Thickness(4, 2, 0, 0), FontWeight = heading ? FontWeights.Bold : FontWeights.Normal }
             };
             Grid.SetColumn(border, i);
             grid.Children.Add(border);
