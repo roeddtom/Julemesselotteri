@@ -52,12 +52,32 @@ public static class DisplayManager
         return displays;
     }
 
-    public static void Place(Window window, string device)
+    public static void Place(Window window, string device) => Place(window, device, GetDisplays());
+
+    internal static void Place(Window window, string device, IReadOnlyList<DisplayInfo> displays)
     {
-        var displays = GetDisplays();
         var display = displays.FirstOrDefault(d => d.Device == device)
             ?? displays.FirstOrDefault(d => !d.Primary) ?? displays.FirstOrDefault();
         if (display is null) throw new InvalidOperationException("Fant ingen tilgjengelig publikumsskjerm.");
+        if (displays.Count == 1)
+        {
+            window.Topmost = false;
+            if (window.WindowStyle != WindowStyle.SingleBorderWindow)
+            {
+                window.WindowState = WindowState.Normal;
+                window.WindowStyle = WindowStyle.SingleBorderWindow;
+                window.ResizeMode = ResizeMode.CanResize;
+                var area = SystemParameters.WorkArea;
+                window.Width = Math.Min(960, area.Width * 0.8);
+                window.Height = Math.Min(600, area.Height * 0.8);
+                window.Left = area.Left + (area.Width - window.Width) / 2;
+                window.Top = area.Top + (area.Height - window.Height) / 2;
+            }
+            return;
+        }
+        window.WindowState = WindowState.Normal;
+        window.WindowStyle = WindowStyle.None;
+        window.ResizeMode = ResizeMode.NoResize;
         // Cover independent slide shows on the projector without trapping the operator on a single screen.
         window.Topmost = !display.Primary;
         if (!SetWindowPos(new WindowInteropHelper(window).Handle, window.Topmost ? -1 : 0,

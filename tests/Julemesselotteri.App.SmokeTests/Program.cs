@@ -22,6 +22,7 @@ internal static class Program
         SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
         try
         {
+            CheckDisplayPlacement();
             var store = new EventFileStore(root, Path.Combine(root, "logs"));
             var engine = new LotteryEngine(store, _ => 0);
             engine.SaveSettings(new AppSettings
@@ -219,6 +220,40 @@ internal static class Program
         encoder.Frames.Add(BitmapFrame.Create(image));
         using var output = File.Create(path);
         encoder.Save(output);
+    }
+
+    private static void CheckDisplayPlacement()
+    {
+        var display = DisplayManager.GetDisplays().First();
+        var audience = new AudienceWindow();
+        audience.Show();
+        try
+        {
+            DisplayManager.Place(audience, display.Device, [display]);
+            Pump();
+            Check(audience.WindowState == WindowState.Normal, "Single-screen audience is not maximized");
+            Check(audience.WindowStyle == WindowStyle.SingleBorderWindow &&
+                audience.ResizeMode == ResizeMode.CanResize && !audience.Topmost,
+                "Single-screen audience has movable, resizable window chrome");
+            Check(audience.Width < SystemParameters.WorkArea.Width &&
+                audience.Height < SystemParameters.WorkArea.Height, "Single-screen audience does not fill screen");
+            audience.Width = 640;
+            audience.Height = 400;
+            audience.Left += 10;
+            var left = audience.Left;
+            DisplayManager.Place(audience, display.Device, [display]);
+            Check(audience.Width == 640 && audience.Height == 400 && audience.Left == left,
+                "Subsequent draws preserve operator-adjusted audience bounds");
+            var projector = display with { Device = "test-projector", Primary = false };
+            DisplayManager.Place(audience, projector.Device, [display, projector]);
+            Check(audience.WindowStyle == WindowStyle.None && audience.ResizeMode == ResizeMode.NoResize &&
+                audience.Topmost, "Multiple screens retain borderless projector behavior");
+            DisplayManager.Place(audience, "disconnected-projector", [display]);
+            Check(audience.WindowState == WindowState.Normal &&
+                audience.WindowStyle == WindowStyle.SingleBorderWindow && !audience.Topmost,
+                "Disconnecting projector restores windowed mode");
+        }
+        finally { audience.Close(); }
     }
 
     private static void CheckAudio()

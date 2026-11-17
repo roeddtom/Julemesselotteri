@@ -11,7 +11,10 @@ Test med de faktiske skjermene før programmet brukes på et arrangement.
 4. Velg projektoren under **Visning og lyd**. Bruk **Oppdater skjermer** ved behov.
 
 Operatørvinduet er ikke fullskjerm. Publikumsvinduet åpnes separat på valgt
-skjerm når en runde starter. På en PC med bare én skjerm vises begge vinduer der.
+skjerm når en runde starter. Med bare én tilkoblet skjerm åpnes det som et vanlig,
+ikke-maksimert vindu med tittellinje, som kan flyttes og endres i størrelse.
+Vinduets plassering og størrelse beholdes mellom trekningene i samme runde.
+Med flere tilkoblede skjermer fyller publikumsvinduet den valgte skjermen.
 PowerPoint kjøres uavhengig; programmet starter, stopper eller bytter ikke lysbilder.
 På en sekundærskjerm holdes publikumsvinduet øverst, over lysbildefremvisningen.
 På hovedskjermen holdes det ikke alltid øverst, slik at operatørvinduet er

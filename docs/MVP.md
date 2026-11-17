@@ -61,7 +61,9 @@ runde. Gevinstmengden kan ikke overstige tilgjengelige lodd. Øvre grense er
   Tidlig avslutning krever bekreftelse og beholder et allerede valgt vinnertall.
 - Sekundærskjermen holdes over uavhengige lysbildefremvisninger. Hovedskjermen
   bruker ikke alltid-øverst, slik at operatøren fortsatt er tilgjengelig ved øving
-  med én skjerm. Programmet støtter skjermenes individuelle DPI-skalering.
+  med én skjerm. Med bare én tilkoblet skjerm brukes et vanlig, flyttbart og
+  størrelsesjusterbart vindu i stedet for fullskjerm. Nye trekninger beholder
+  plassering og størrelse i samme runde. Programmet støtter individuell DPI-skalering.
 - Selvstendig Windows x64-MVP er publisert med profilen `Portable`
   i `artifacts\win-x64`. Ingen nettbaserte ressurser, mediefiler eller skrifter
   lastes ned ved kjøring. Lydene syntetiseres lokalt.
