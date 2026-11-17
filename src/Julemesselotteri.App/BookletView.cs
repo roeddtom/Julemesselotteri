@@ -22,7 +22,7 @@ public sealed class BookletView : Grid
     private readonly Border _paper;
     private readonly StackPanel _rows = new();
     private readonly TextBlock _coverLabel = new() { FontSize = 19, TextAlignment = TextAlignment.Right };
-    private readonly TextBlock _winner = new() { FontSize = 44, FontWeight = FontWeights.Bold, TextAlignment = TextAlignment.Center };
+    private readonly TextBlock _winner = new() { FontSize = 72, FontWeight = FontWeights.Bold, TextAlignment = TextAlignment.Center };
     private readonly ScaleTransform _turn = new(1, 1);
     private int _book;
     private int _page;
@@ -61,8 +61,8 @@ public sealed class BookletView : Grid
         var spread = new Grid();
         spread.ColumnDefinitions.Add(new ColumnDefinition());
         spread.ColumnDefinitions.Add(new ColumnDefinition());
-        var summary = new StackPanel { Margin = new Thickness(20), VerticalAlignment = VerticalAlignment.Center };
-        summary.Children.Add(_winner);
+        var summary = new StackPanel { Margin = new Thickness(12), VerticalAlignment = VerticalAlignment.Center };
+        summary.Children.Add(new Viewbox { Child = _winner, Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly });
         spread.Children.Add(summary);
         var spine = new Border { Width = 2, HorizontalAlignment = HorizontalAlignment.Center, Background = (Brush)Application.Current.FindResource("BrandBorder") };
         Grid.SetColumnSpan(spine, 2);
@@ -178,7 +178,9 @@ public sealed class BookletView : Grid
         row.Background = (Brush)Application.Current.FindResource("Accent");
         TextElement.SetForeground(row, (Brush)Application.Current.FindResource("BrandCream"));
         HighlightedNumber = draw.Number;
-        _winner.Text = $"Vinner\n{draw.Number}";
+        _winner.Inlines.Clear();
+        _winner.Inlines.Add(new Run("Vinner\n"));
+        _winner.Inlines.Add(new Run(draw.Number.ToString()) { FontSize = 104 });
         Visibility = Visibility.Visible;
     }
 }

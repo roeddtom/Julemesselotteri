@@ -25,10 +25,6 @@
                     <Image x:Name="BrandLogo" Source="{StaticResource YouthCentreLogo}" Width="280" Height="90"
                            Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Top"
                            AutomationProperties.Name="Ungdomssenteret"/>
-                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,28,0">
-                        <TextBlock Text="JULEMESSELOTTERI" FontSize="20" FontWeight="Bold"/>
-                        <TextBlock x:Name="ModeText" FontSize="23" Margin="0,8,0,0" TextAlignment="Right"/>
-                    </StackPanel>
                 </Grid>
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>

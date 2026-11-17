@@ -100,6 +100,9 @@ Forsiden og begge oppslagssidene har stående A5-proporsjoner (148:210).
 Oppslaget er to forsidebredder, og tabellkolonnene tilpasses én side.
 Publikumsvinduets nederste slagord er fjernet. Vinnerlistens vertikale
 rullefelt er skjult, men programmatisk rulling til nyeste vinner beholdes.
+Tekstene øverst til høyre og sluttmeldingen «Gratulerer» er fjernet.
+Venstresidens vinnertekst bruker 72 WPF-enheter og tallet 104, tilpasset sidebredden
+med proporsjonal nedskalering for å unngå avkutting av lange loddnummer.
 De 40 transparente PNG-radene i `design\bokloddrader` bygges inn i appen.
 Hver av bokas 50 rader får et tilfeldig valgt dekorbilde med tilbakelegging,
 vist proporsjonalt over navn- og telefonkolonnene uten å dekke loddnummeret.

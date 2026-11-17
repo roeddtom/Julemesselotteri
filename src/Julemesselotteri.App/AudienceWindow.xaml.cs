@@ -17,7 +17,6 @@ public partial class AudienceWindow : Window
     public void UpdateRound(LotteryRound? round, bool bookAnimationEnabled = false)
     {
         if (round is null) return;
-        ModeText.Text = round.Mode == LotteryMode.Hearts ? "Hjertelodd" : "Boklodd";
         var winners = round.Draws.Where(d => d.RevealedAt is not null).Reverse()
             .Select(d => new WinnerItem(d.Prize, round.Mode == LotteryMode.Books
                 ? $"{d.Number} · Bok {d.Book}" : d.Number.ToString())).ToArray();
@@ -34,7 +33,8 @@ public partial class AudienceWindow : Window
         StageText.Text = round.PendingDraw is not null ? "TREKNING VENTER" : last is null ? "ER DERE KLARE?" : "VINNERNUMMER";
         ShowDigits(round.PendingDraw is not null ? "—" : last?.Number.ToString() ?? "—", false);
         BookText.Text = round.PendingDraw is null && last is not null && round.Mode == LotteryMode.Books ? BookLabel(last) : "";
-        HintText.Text = last is null || round.PendingDraw is not null ? "Lykke til!" : "Gratulerer!";
+        HintText.Text = last is null || round.PendingDraw is not null ? "Lykke til!" : "";
+        HintText.Visibility = HintText.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
     }
 
     public void RevealNow() => _revealSignal.TrySetResult();
@@ -52,6 +52,7 @@ public partial class AudienceWindow : Window
             VirtualBook.Visibility = Visibility.Collapsed;
             ReelsView.Visibility = Visibility.Visible;
             BookText.Text = "";
+            HintText.Visibility = Visibility.Visible;
             HintText.Text = "Hvem blir den heldige?";
             if (round.Mode == LotteryMode.Books)
             {
@@ -78,7 +79,8 @@ public partial class AudienceWindow : Window
                 settings, sound, soundOptions, token, bookTickets);
             StageText.Text = "VINNERNUMMER";
             ShowDigits(draw.Number.ToString(), false);
-            HintText.Text = "Gratulerer!";
+            HintText.Text = "";
+            HintText.Visibility = Visibility.Collapsed;
             if (bookAnimationEnabled && round.Mode == LotteryMode.Books)
             {
                 await WaitAsync(TimeSpan.FromMilliseconds(600), token);

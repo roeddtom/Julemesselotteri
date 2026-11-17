@@ -34,6 +34,8 @@ PowerPoint på den faktiske PC-en.
 
 Publikumsvinduet har ingen bunntekst med slagord. Vinnerlisten viser ikke
 rullefelt; den oppdateres automatisk med nyeste vinner øverst.
+Overskriftene øverst til høyre og «Gratulerer» nederst er fjernet for en roligere
+vinnervisning. Logoen og vinnerlisten beholdes.
 
 ## Gevinster
 
@@ -109,6 +111,8 @@ Hver side har stående A5-proporsjoner. Tabellsiden er like bred som forsiden;
 et åpent oppslag består av to slike sider.
 Venstresiden viser bare «Vinner» og loddnummeret. Tabellen er sentrert
 vertikalt på høyresiden.
+Vinnerteksten er ekstra stor, med enda større loddnummer, og skaleres ved
+behov slik at hele tallet får plass på siden.
 Tabellsiden starter med kolonneoverskriftene, uten gjentatt boknummer eller
 loddintervall over tabellen. Disse opplysningene vises ellers i publikumsvinduet.
 Navn- og telefonfeltene fylles med tilfeldig valgte dekorative håndskriftbilder

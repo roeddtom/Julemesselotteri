@@ -431,6 +431,8 @@ internal static class Program
         slow.GetAwaiter().GetResult();
         Check(fastTicks > slowTicks, "Configured speed changes reel movement frequency independently of duration");
         Check(audience.DisplayedNumber == "73", "Animation speed cannot change selected winner");
+        Check(Control<TextBlock>(audience, "HintText").Visibility == Visibility.Collapsed,
+            "Completed heart animation does not show congratulations");
         audience.Close();
     }
 
@@ -477,8 +479,18 @@ internal static class Program
         }
         var table = spread.Children.OfType<StackPanel>().Single(p => Grid.GetColumn(p) == 1);
         var summary = spread.Children.OfType<StackPanel>().Single(p => Grid.GetColumn(p) == 0);
-        Check(summary.Children.Count == 1 && summary.Children[0] is TextBlock { Text: "Vinner\n4000" },
+        Check(summary.Children.Count == 1 && summary.Children[0] is Viewbox { Child: TextBlock { Text: "Vinner\n4000" } },
             "Left page contains only the winner label and ticket number");
+        var winnerView = (Viewbox)summary.Children[0];
+        var winner = (TextBlock)winnerView.Child;
+        var transform = winner.TransformToAncestor(spread);
+        var origin = transform.Transform(new Point());
+        var scaledFont = transform.Transform(new Point(0, winner.FontSize)).Y - origin.Y;
+        Check(scaledFont >= 55, "Winner label remains substantially larger after fitting a four-digit result");
+        Check(winner.Inlines.LastInline is System.Windows.Documents.Run { FontSize: 104 },
+            "Winning number is emphasized beyond the enlarged winner label");
+        Check(winnerView.ActualWidth <= spread.ColumnDefinitions[0].ActualWidth &&
+            winnerView.ActualHeight <= spread.ActualHeight, "Large winner text fits within the portrait page");
         var tableTop = table.TranslatePoint(new Point(), spread).Y;
         Check(Math.Abs(tableTop - (spread.ActualHeight - table.ActualHeight) / 2) < 1,
             "Table is vertically centered on the right page");
@@ -565,6 +577,11 @@ internal static class Program
             Check(!Descendants(content).OfType<TextBlock>().Any(text =>
                 text.Text.Contains("Små lodd", StringComparison.OrdinalIgnoreCase)),
                 "Audience layout no longer shows the bottom slogan");
+            Check(Control<TextBlock>(audience, "HintText").Visibility == Visibility.Collapsed,
+                "Completed draw hides the congratulations text and its layout space");
+            Check(!Descendants(content).OfType<TextBlock>().Any(text =>
+                text.Text is "JULEMESSELOTTERI" or "Hjertelodd" or "Boklodd"),
+                "Upper-right title and lottery-mode headings are removed");
             Check(!audience.IsVisible, "Audience layout checks never display the window");
         }
         finally { audience.Close(); }
@@ -623,6 +640,8 @@ internal static class Program
             animation.GetAwaiter().GetResult();
             Check(frames > 1, "Constrained ticket frames were checked");
             Check(audience.DisplayedNumber == number.ToString(), "Animation ends on the saved winner");
+            Check(Control<TextBlock>(audience, "HintText").Visibility == Visibility.Collapsed,
+                "Completed book animation does not show congratulations");
             Check(Control<BookletView>(audience, "VirtualBook").Visibility == Visibility.Collapsed,
                 "Disabled option retains number-only animation");
             draw.RevealedAt = DateTimeOffset.Now;
