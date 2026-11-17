@@ -1,8 +1,9 @@
 using Julemesselotteri.Core;
+using Xunit.Abstractions;
 
 namespace Julemesselotteri.Core.Tests;
 
-public sealed class LotteryTests
+public sealed class LotteryTests(ITestOutputHelper output)
 {
     private sealed class MemoryStore : IEventStore
     {
@@ -21,6 +22,46 @@ public sealed class LotteryTests
         var engine = new LotteryEngine(store ?? new MemoryStore(), _ => 0);
         engine.SaveSettings(new AppSettings { HeartPrizes = "Hovedgevinst\nSjokolade", BookPrizes = "Sykkel\nKake" });
         return engine;
+    }
+
+    [Fact]
+    public void CryptographicDrawsHaveNoStatisticallyExcessiveConcentrationInTenThousandSamples()
+    {
+        const int sampleCount = 10_000;
+        const int ticketCount = 4_000;
+        const int bucketSize = 100;
+        var counts = new int[ticketCount];
+        var engine = new LotteryEngine(new MemoryStore());
+        engine.SaveSettings(new AppSettings { BookPrizes = "Premie", Books = new() { LastTicket = ticketCount } });
+        for (var sample = 0; sample < sampleCount; sample++)
+        {
+            engine.StartRound(LotteryMode.Books);
+            var number = engine.SelectWinner().Number;
+            Assert.InRange(number, 1, ticketCount);
+            counts[number - 1]++;
+            engine.RevealWinner();
+            engine.EndRound();
+            // Reset eligibility so samples are independent draws with replacement, unlike real event winners.
+            engine.NewEvent();
+        }
+
+        var expectedPerTicket = (double)sampleCount / ticketCount;
+        var ticketChiSquared = counts.Sum(count => Math.Pow(count - expectedPerTicket, 2) / expectedPerTicket);
+        var buckets = counts.Chunk(bucketSize).Select(bucket => bucket.Sum()).ToArray();
+        var expectedPerBucket = expectedPerTicket * bucketSize;
+        var bucketChiSquared = buckets.Sum(count => Math.Pow(count - expectedPerBucket, 2) / expectedPerBucket);
+        var maximum = counts.Max();
+        var histogram = counts.GroupBy(count => count).OrderBy(group => group.Key)
+            .Select(group => $"{group.Key} hits: {group.Count()} numbers");
+        output.WriteLine($"Samples: {sampleCount}; range: 1–{ticketCount}; expected hits per number: {expectedPerTicket:F1}");
+        output.WriteLine(string.Join("; ", histogram));
+        output.WriteLine($"Maximum: {maximum}; numbers above five hits: {counts.Count(count => count > 5)}");
+        output.WriteLine($"Ticket Pearson statistic (3999 df): {ticketChiSquared:F2}; 40-bucket statistic (39 df): {bucketChiSquared:F2}");
+
+        // Conservative smoke-test limits, not a proof of randomness. Rare false alarms remain possible.
+        Assert.True(ticketChiSquared < 4_800, $"Excessive per-ticket imbalance: {ticketChiSquared:F2}");
+        Assert.True(bucketChiSquared < 120, $"Excessive imbalance across 100-number ranges: {bucketChiSquared:F2}");
+        Assert.True(maximum < 20, $"An individual ticket occurred unusually often: {maximum} hits");
     }
 
     [Fact]

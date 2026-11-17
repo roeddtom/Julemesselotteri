@@ -132,7 +132,7 @@ skjermbilder, også med minste operatørstørrelse.
 
 ## Verifikasjon og versjonskontroll
 
-Trekkmotoren har 29 automatiserte testtilfeller. En separat WPF-skjermtest bruker
+Trekkmotoren har 30 automatiserte testtilfeller. En separat WPF-skjermtest bruker
 midlertidige data og åpner ekte vinduer for å kontrollere validering, omvendt
 gevinstrekkefølge, unike nummer, rundebytte, lukking av publikumsvindu og omstart.
 Skjermtesten kontrollerer naturlig varighet, forskjellig tallbyttehastighet,
@@ -145,6 +145,26 @@ den portable publiseringen. Publiseringsmappen inneholder .NET- og WPF-runtime.
 Operatør- og publikumsskjermbilder er visuelt kontrollert.
 Dette erstatter ikke sjekken av fysisk projektor, høyttalere, lesbarhet i rommet
 og PowerPoint-fokus på arrangementets PC.
+
+Fordelingstesten kjører 10 000 ekte `SelectWinner`-kall med standardgeneratoren
+(`RandomNumberGenerator.GetInt32`) over 1–4000. Nytt arrangement mellom hvert
+trekk gir trekking med tilbakelegging uten å endre reglene for faktiske lotterier.
+Testutdata viser treffhistogram, maksimum, antall nummer over fem treff og
+Pearson-statistikk. Konservative varslingsgrenser er 4800 for 4000 enkeltnummer
+(3999 frihetsgrader), 120 for 40 sammenhengende grupper med 100 nummer
+(39 frihetsgrader), og under 20 treff for hvert enkeltnummer.
+Grupperingen gir 250 forventede treff per gruppe; enkeltnummertesten fanger
+også skjevhet innad i gruppene. Grensene er diagnostiske, ikke en lovnad om
+perfekt fordeling. Testen bruker ekte tilfeldighet og kan i sjeldne tilfeller
+feile selv med en korrekt generator; et avvik skal undersøkes, ikke omgås
+med gjentatte kjøringer til testen blir grønn.
+
+Kjør bare fordelingstesten uten appvinduer:
+`dotnet test tests\Julemesselotteri.Core.Tests --filter FullyQualifiedName~CryptographicDraws --logger "console;verbosity=detailed"`.
+Første kontroll 17.11.2026 bestod: 10 000 trekk, maksimum 10 treff,
+177 nummer med mer enn fem treff, Pearson 3968,80 for enkeltnummer og
+52,39 for grupper. Alle 30 kjernetester bestod. Dette er ett utvalg, ikke
+faste forventede resultater for neste kjøring.
 
 `--headless-displays` kontrollerer skjermvalg med simulerte oppsett og
 plassering i fysiske skjermkoordinater med skjulte vinduer. Det dekker

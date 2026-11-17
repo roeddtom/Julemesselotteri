@@ -74,6 +74,20 @@ Gevinster som ikke ble trukket, blir ikke loggført som utdelt.
 
 Bok 1 har 1–50, bok 2 har 51–100, osv. Lodd 73 vises som lodd 73 i bok 2.
 En delvis solgt bok gir ikke dårligere vinnersjanse per solgte lodd enn en full bok.
+
+### Hvor tilfeldige er tallene?
+
+Vinneren velges med .NETs kryptografiske `RandomNumberGenerator.GetInt32`,
+som velger en jevnt fordelt indeks blant alle kvalifiserte lodd uten modulobias.
+Animasjonen bestemmer ikke vinneren, og fordelingen utjevnes ikke kunstig.
+
+En automatisk kontroll trekker 10 000 ganger fra 1–4000 med samme trekkmotor
+og generator. Testen nullstiller arrangementet mellom trekkene, slik at nummer
+kan gjentas. Gjennomsnittet er 2,5 treff per nummer, men fem er ikke en øvre
+grense: omtrent 168 av de 4000 numrene forventes å få mer enn fem treff.
+Noen nummer får ingen treff. Dette er normalt ved uavhengige tilfeldige trekk.
+Testen leter etter uvanlig stor skjevhet, ikke en helt jevn fordeling, og er
+ingen garanti eller sertifisering av tilfeldighet.
 Det velges ett lodd fra alle kvalifiserte lodd, ikke først en tilfeldig bok.
 
 ## Animasjon og lyd
