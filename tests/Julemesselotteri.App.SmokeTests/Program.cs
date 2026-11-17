@@ -580,8 +580,8 @@ internal static class Program
             Check(Control<TextBlock>(audience, "HintText").Visibility == Visibility.Collapsed,
                 "Completed draw hides the congratulations text and its layout space");
             Check(!Descendants(content).OfType<TextBlock>().Any(text =>
-                text.Text is "JULEMESSELOTTERI" or "Hjertelodd" or "Boklodd"),
-                "Upper-right title and lottery-mode headings are removed");
+                text.Text is "JULEMESSELOTTERI" or "Hjertelodd" or "Boklodd" or "NÅ TREKKER VI"),
+                "Extra audience headings are removed");
             Check(!audience.IsVisible, "Audience layout checks never display the window");
         }
         finally { audience.Close(); }

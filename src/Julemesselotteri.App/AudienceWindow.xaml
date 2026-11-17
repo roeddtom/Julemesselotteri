@@ -33,8 +33,6 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel VerticalAlignment="Center" Margin="0,0,0,32">
-                        <TextBlock Text="NÅ TREKKER VI" Foreground="{StaticResource BrandCream}" FontSize="19"
-                                   HorizontalAlignment="Center" Margin="0,0,0,16"/>
                         <Viewbox MaxHeight="110" Margin="20,0">
                             <TextBlock x:Name="PrizeText" FontSize="50" MaxWidth="900" TextAlignment="Center"
                                        FontWeight="SemiBold" Foreground="{StaticResource BrandCream}"/>

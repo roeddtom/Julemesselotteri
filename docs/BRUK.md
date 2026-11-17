@@ -34,8 +34,8 @@ PowerPoint på den faktiske PC-en.
 
 Publikumsvinduet har ingen bunntekst med slagord. Vinnerlisten viser ikke
 rullefelt; den oppdateres automatisk med nyeste vinner øverst.
-Overskriftene øverst til høyre og «Gratulerer» nederst er fjernet for en roligere
-vinnervisning. Logoen og vinnerlisten beholdes.
+Overskriftene øverst til høyre, «Nå trekker vi» og «Gratulerer» nederst er
+fjernet for en roligere vinnervisning. Logoen og vinnerlisten beholdes.
 
 ## Gevinster
 
