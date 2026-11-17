@@ -58,10 +58,10 @@ public partial class MainWindow : Window
 
     private void RefreshDisplays(string device)
     {
-        var displays = DisplayManager.GetDisplays();
+        var displays = DisplayManager.AudienceDisplays(DisplayManager.GetDisplays());
         DisplayBox.ItemsSource = displays;
         DisplayBox.SelectedItem = displays.FirstOrDefault(d => d.Device == device)
-            ?? displays.FirstOrDefault(d => !d.Primary) ?? displays.FirstOrDefault();
+            ?? displays.FirstOrDefault();
     }
 
     private void SettingsChanged(object sender, RoutedEventArgs e)
@@ -272,6 +272,9 @@ public partial class MainWindow : Window
     private void EnsureAudience()
     {
         if (_engine.State.ActiveRound is null) return;
+        var displays = DisplayManager.GetDisplays();
+        DisplayManager.PlaceOperator(this, displays);
+        var opening = _audience is null || !_audience.IsVisible;
         if (_audience is null)
         {
             _audience = new AudienceWindow();
@@ -281,10 +284,13 @@ public partial class MainWindow : Window
                 _animationCancellation?.Cancel();
                 _sound.Stop();
             };
+        }
+        DisplayManager.Place(_audience, _engine.State.Settings.DisplayDevice, displays);
+        if (opening)
+        {
             _audience.Show();
             Activate();
         }
-        DisplayManager.Place(_audience, _engine.State.Settings.DisplayDevice);
         _audience.UpdateRound(_engine.State.ActiveRound, _engine.State.Settings.BookAnimationEnabled);
     }
 
@@ -336,8 +342,11 @@ public partial class MainWindow : Window
         Process.Start(new ProcessStartInfo { FileName = _store.LogDirectory, UseShellExecute = true });
     });
 
-    private void RefreshDisplays_Click(object sender, RoutedEventArgs e) =>
+    private void RefreshDisplays_Click(object sender, RoutedEventArgs e) => Execute(() =>
+    {
         RefreshDisplays((DisplayBox.SelectedItem as DisplayInfo)?.Device ?? "");
+        if (_audience is not null) EnsureAudience();
+    });
 
     private void TestSound_Click(object sender, RoutedEventArgs e)
     {

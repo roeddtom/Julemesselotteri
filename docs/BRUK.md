@@ -15,11 +15,17 @@ som manualens systemreserve. Ingen ekstra skrifter må installeres.
 3. Start `Julemesselotteri.App.exe`. Programmet trenger ikke internett.
 4. Velg projektoren under **Visning og lyd**. Bruk **Oppdater skjermer** ved behov.
 
-Operatørvinduet er ikke fullskjerm. Publikumsvinduet åpnes separat på valgt
-skjerm når en runde starter. Med bare én tilkoblet skjerm åpnes det som et vanlig,
+Operatørvinduet er ikke fullskjerm og åpnes på hovedskjermen angitt i Windows.
+Når publikumsvinduet åpnes eller plasseres på nytt, flyttes operatørvinduet
+tilbake til hovedskjermen hvis det står på en annen skjerm.
+Publikumsvinduet åpnes separat på en annen skjerm når en runde starter.
+Med flere tilkoblede skjermer viser skjermvalget bare sekundærskjermer.
+Et lagret valg av hovedskjermen eller en frakoblet skjerm erstattes automatisk
+med en tilgjengelig sekundærskjerm. Med bare én tilkoblet skjerm åpnes det som et vanlig,
 ikke-maksimert vindu med tittellinje, som kan flyttes og endres i størrelse.
 Vinduets plassering og størrelse beholdes mellom trekningene i samme runde.
 Med flere tilkoblede skjermer fyller publikumsvinduet den valgte skjermen.
+**Oppdater skjermer** oppdaterer valgene og plasserer åpne vinduer på nytt.
 PowerPoint kjøres uavhengig; programmet starter, stopper eller bytter ikke lysbilder.
 På en sekundærskjerm holdes publikumsvinduet øverst, over lysbildefremvisningen.
 På hovedskjermen holdes det ikke alltid øverst, slik at operatørvinduet er

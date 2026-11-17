@@ -28,6 +28,7 @@ public partial class App : Application
             var logs = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Julemesselotteri");
             var store = new EventFileStore(data, logs);
             MainWindow = new MainWindow(new LotteryEngine(store), store);
+            DisplayManager.PlaceOperator(MainWindow);
             MainWindow.Show();
         }
         catch (Exception ex)

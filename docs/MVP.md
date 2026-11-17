@@ -68,6 +68,12 @@ runde. Gevinstmengden kan ikke overstige tilgjengelige lodd. Øvre grense er
   med én skjerm. Med bare én tilkoblet skjerm brukes et vanlig, flyttbart og
   størrelsesjusterbart vindu i stedet for fullskjerm. Nye trekninger beholder
   plassering og størrelse i samme runde. Programmet støtter individuell DPI-skalering.
+- Operatørvinduet plasseres innenfor hovedskjermens arbeidsområde ved oppstart.
+  Før publikumsvinduet vises eller plasseres på nytt, sikres hovedskjermen for
+  operatøren. Publikum velges bare blant sekundærskjermer når de finnes, også
+  når tidligere lagret skjermvalg peker på hovedskjermen eller en frakoblet skjerm.
+  Et eksplisitt valg blant flere sekundærskjermer beholdes.
+  Skjermoppdatering plasserer også et åpent publikumsvindu på nytt.
 - Selvstendig Windows x64-MVP er publisert med profilen `Portable`
   i `artifacts\win-x64`. Ingen nettbaserte ressurser, mediefiler eller skrifter
   lastes ned ved kjøring. Lydene syntetiseres lokalt.
@@ -139,6 +145,12 @@ den portable publiseringen. Publiseringsmappen inneholder .NET- og WPF-runtime.
 Operatør- og publikumsskjermbilder er visuelt kontrollert.
 Dette erstatter ikke sjekken av fysisk projektor, høyttalere, lesbarhet i rommet
 og PowerPoint-fokus på arrangementets PC.
+
+`--headless-displays` kontrollerer skjermvalg med simulerte oppsett og
+plassering i fysiske skjermkoordinater med skjulte vinduer. Det dekker
+hovedskjerm, valgt sekundærskjerm, frakoblet valg og én-skjermsmodus, og
+bekrefter at plasseringskallene ikke viser vinduene. Ved vanlig kjøring
+plasseres nye vinduer før de vises, slik at de ikke først blinker på feil skjerm.
 
 En utilgjengelig, allerede konfigurert pakkekilde ga feil ved første publisering.
 Publiseringen lyktes med `-p:RestoreIgnoreFailedSources=true`, uten endring av

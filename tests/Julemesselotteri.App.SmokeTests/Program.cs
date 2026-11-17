@@ -1,8 +1,10 @@
 using System.Globalization;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -22,6 +24,14 @@ internal static class Program
         SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
         try
         {
+            if (args.FirstOrDefault() == "--headless-displays")
+            {
+                CheckDisplayRouting();
+                CheckOperatorPlacement();
+                CheckDisplayPlacement();
+                Console.WriteLine("PASS: primary operator placement, separate audience routing and single-screen fallback; no windows shown.");
+                return 0;
+            }
             if (args.FirstOrDefault() == "--headless-booklet")
             {
                 CheckBookletRows();
@@ -32,6 +42,8 @@ internal static class Program
                 return 0;
             }
             CheckDisplayPlacement();
+            CheckDisplayRouting();
+            CheckOperatorPlacement();
             var store = new EventFileStore(root, Path.Combine(root, "logs"));
             var engine = new LotteryEngine(store, _ => 0);
             engine.SaveSettings(new AppSettings
@@ -284,7 +296,6 @@ internal static class Program
     {
         var display = DisplayManager.GetDisplays().First();
         var audience = new AudienceWindow();
-        audience.Show();
         try
         {
             DisplayManager.Place(audience, display.Device, [display]);
@@ -306,12 +317,72 @@ internal static class Program
             DisplayManager.Place(audience, projector.Device, [display, projector]);
             Check(audience.WindowStyle == WindowStyle.None && audience.ResizeMode == ResizeMode.NoResize &&
                 audience.Topmost, "Multiple screens retain borderless projector behavior");
+            Check(WindowBounds(audience) == new Rect(projector.Left, projector.Top, projector.Width, projector.Height),
+                "Audience is placed at the selected display's physical pixel bounds");
+            Check(!IsWindowVisible(new WindowInteropHelper(audience).Handle), "Audience placement does not show the window");
             DisplayManager.Place(audience, "disconnected-projector", [display]);
             Check(audience.WindowState == WindowState.Normal &&
                 audience.WindowStyle == WindowStyle.SingleBorderWindow && !audience.Topmost,
                 "Disconnecting projector restores windowed mode");
+            Check(!audience.IsVisible && !IsWindowVisible(new WindowInteropHelper(audience).Handle),
+                "Single-screen fallback does not show the window");
         }
         finally { audience.Close(); }
+    }
+
+    private static void CheckDisplayRouting()
+    {
+        var primary = new DisplayInfo("main", "Main", true, 0, 0, 1920, 1080);
+        var projector = new DisplayInfo("projector", "Projector", false, -1920, -200, 1920, 1080);
+        var third = new DisplayInfo("third", "Third", false, 1920, 0, 2560, 1440);
+        DisplayInfo[] displays = [projector, primary, third];
+        Check(DisplayManager.SelectAudienceDisplay(primary.Device, displays) == projector,
+            "Saved primary display cannot place the audience over the operator");
+        Check(DisplayManager.SelectAudienceDisplay(third.Device, displays) == third,
+            "Explicit secondary display choice is preserved");
+        Check(DisplayManager.SelectAudienceDisplay("disconnected", displays) == projector &&
+            DisplayManager.SelectAudienceDisplay("", displays) == projector,
+            "Missing or disconnected preference falls back to a non-primary display");
+        Check(DisplayManager.AudienceDisplays(displays).SequenceEqual([projector, third]),
+            "Audience selector excludes the main display when alternatives exist");
+        Check(DisplayManager.SelectAudienceDisplay(projector.Device, [primary]) == primary,
+            "One display remains available for a separate window");
+        Check(DisplayManager.AudienceDisplays([primary]).Single() == primary,
+            "Single-screen selector retains the main display");
+    }
+
+    private static void CheckOperatorPlacement()
+    {
+        var displays = DisplayManager.GetDisplays();
+        var primary = displays.First(d => d.Primary);
+        var window = new Window { Width = 800, Height = 500, WindowStartupLocation = WindowStartupLocation.CenterScreen };
+        try
+        {
+            DisplayManager.PlaceOperator(window, displays.OrderBy(d => d.Primary).ToArray());
+            Check(window.WindowStartupLocation == WindowStartupLocation.Manual,
+                "Default startup placement cannot override the primary monitor");
+            Check(primary.WorkArea.Contains(WindowBounds(window)), "Operator fits inside the primary monitor's work area");
+            Check(!window.IsVisible && !IsWindowVisible(new WindowInteropHelper(window).Handle),
+                "Operator can be positioned without displaying it");
+        }
+        finally { window.Close(); }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeRect { public int Left, Top, Right, Bottom; }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetWindowRect(nint handle, out NativeRect bounds);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindowVisible(nint handle);
+
+    private static Rect WindowBounds(Window window)
+    {
+        Check(GetWindowRect(new WindowInteropHelper(window).EnsureHandle(), out var bounds), "Native window bounds can be read");
+        return new Rect(bounds.Left, bounds.Top, bounds.Right - bounds.Left, bounds.Bottom - bounds.Top);
     }
 
     private static void CheckAudio()

@@ -2,6 +2,8 @@
 
 Frakoblet Windows-program for boklodd og hjertelodd på julemessa.
 Operatøren styrer trekningen på PC-en; publikum ser et separat projektorvindu.
+Operatørvinduet plasseres på Windows-hovedskjermen. Publikum bruker en annen
+skjerm når en er tilkoblet, ellers et vanlig separat vindu på samme skjerm.
 
 Avklarte krav og iterasjonsplan: [MVP](docs/MVP.md).
 Veiledning og arrangementssjekkliste: [Bruk](docs/BRUK.md).
@@ -42,7 +44,12 @@ Appskjermbilder kan lagres med
 Uten synlige vinduer kan boklayout, sidemapping og tallanimasjoner kontrolleres med:
 `dotnet run --project tests\Julemesselotteri.App.SmokeTests -- --headless-booklet artifacts\portrait-booklet`.
 Dette lagrer et bilde av bokoppslaget uten å åpne appvinduene; full skjermtest
-over er fortsatt nødvendig for skjermplassering og operatørflyt.
+over er fortsatt nødvendig for hele operatørflyten.
+
+Skjermvalg og vindusplassering kan kontrolleres uten synlige vinduer med
+`dotnet run --project tests\Julemesselotteri.App.SmokeTests -- --headless-displays`.
+Testen bruker skjulte vinduer og simulerte skjermlister; fysisk projektor og
+fokusrekkefølge må fortsatt kontrolleres manuelt før arrangementet.
 
 Kjernen håndterer gevinster i omvendt rekkefølge, usolgte lodd, unike vinnere,
 atomisk lagring før visning og lesbare logger. Operatørvinduet har egne gevinstlister,
