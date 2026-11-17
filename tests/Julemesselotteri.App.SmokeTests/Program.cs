@@ -474,6 +474,8 @@ internal static class Program
                 "Open pages retain portrait A5 proportions");
         }
         var table = spread.Children.OfType<StackPanel>().Single(p => Grid.GetColumn(p) == 1);
+        Check(table.Children[0] is Grid && !table.Children.OfType<TextBlock>().Any(),
+            "Table page starts with column headings without a repeated book or ticket-range label");
         Check(table.ActualWidth < cover.ActualWidth && table.DesiredSize.Height <= paper.ActualHeight,
             "Number table fits within one portrait page");
         var rows = table.Children.OfType<StackPanel>().Single();

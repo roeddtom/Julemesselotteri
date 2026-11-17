@@ -14,7 +14,6 @@ public sealed class BookletView : Grid
     private readonly Border _paper;
     private readonly StackPanel _rows = new();
     private readonly TextBlock _coverLabel = new() { FontSize = 19, TextAlignment = TextAlignment.Right };
-    private readonly TextBlock _pageLabel = new() { FontSize = 17 };
     private readonly TextBlock _winner = new() { FontSize = 44, FontWeight = FontWeights.Bold };
     private readonly ScaleTransform _turn = new(1, 1);
     private int _book;
@@ -62,7 +61,6 @@ public sealed class BookletView : Grid
         Grid.SetColumnSpan(spine, 2);
         spread.Children.Add(spine);
         var table = new StackPanel { Margin = new Thickness(10), RenderTransform = _turn, RenderTransformOrigin = new Point(0, 0.5) };
-        table.Children.Add(_pageLabel);
         table.Children.Add(CreateRow("Loddnr", "Navn", "Telefon", true));
         table.Children.Add(_rows);
         Grid.SetColumn(table, 1);
@@ -115,7 +113,6 @@ public sealed class BookletView : Grid
         _page = page;
         HighlightedNumber = null;
         _paper.Visibility = Visibility.Visible;
-        _pageLabel.Text = $"Bok {_book} · Lodd {(_book - 1) * 50 + (page - 1) * 10 + 1}–{(_book - 1) * 50 + page * 10}";
         _rows.Children.Clear();
         for (var row = 1; row <= 10; row++)
             _rows.Children.Add(CreateRow(((_book - 1) * 50 + (page - 1) * 10 + row).ToString(), "", ""));

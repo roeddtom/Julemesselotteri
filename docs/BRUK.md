@@ -90,6 +90,8 @@ blar i rekonstruerte tabellsider med ti lodd på hver side. Riktig side og rad
 markeres til slutt. For lodd 73 vises bok 2, tabellsiden 71–80 og tredje rad.
 Hver side har stående A5-proporsjoner. Tabellsiden er like bred som forsiden;
 et åpent oppslag består av to slike sider.
+Tabellsiden starter med kolonneoverskriftene, uten gjentatt boknummer eller
+loddintervall over tabellen. Disse opplysningene vises ellers i publikumsvinduet.
 Navn og telefon er tomme; programmet leser ikke håndskrift fra papirbøkene.
 Boknummer og antall bøker på forsiden beregnes fra trekkeoppsettet.
 **Vis nå** hopper direkte til riktig side og vinnerrad. Uten valget brukes
