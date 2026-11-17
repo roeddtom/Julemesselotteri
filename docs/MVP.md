@@ -93,10 +93,13 @@ Talltromlene beholdes gjennom begge trekkdelene og bokpausen. Først etter
 avslørt loddnummer beholdes vinnertallet i 600 ms, så vises forsiden i 800 ms,
 før boka åpnes og blar til riktig
 tabellside med 300 ms per side. Vinnerraden markeres etter sidevendingen.
-Det rekonstruerte oppslaget viser en informasjonsside og aktuell tabellside,
+Det rekonstruerte oppslaget viser bare «Vinner» og loddnummer på venstresiden,
+og den aktuelle tabellen sentrert vertikalt på høyresiden,
 ikke en nøyaktig gjengivelse av duplex-arkenes trykkoppsett.
 Forsiden og begge oppslagssidene har stående A5-proporsjoner (148:210).
 Oppslaget er to forsidebredder, og tabellkolonnene tilpasses én side.
+Publikumsvinduets nederste slagord er fjernet. Vinnerlistens vertikale
+rullefelt er skjult, men programmatisk rulling til nyeste vinner beholdes.
 De 40 transparente PNG-radene i `design\bokloddrader` bygges inn i appen.
 Hver av bokas 50 rader får et tilfeldig valgt dekorbilde med tilbakelegging,
 vist proporsjonalt over navn- og telefonkolonnene uten å dekke loddnummeret.
@@ -113,6 +116,8 @@ vinnerrad, sidemapping og avbrudd/gjenoppretting med funksjonen på.
 Testvalget `--headless-booklet` kontrollerer sidemapping, A5-proporsjoner,
 sidebredder, tabelltekstens plass, innebygde radbilder, kolonnedekning,
 stabile radbilder ved sidevending og tallanimasjoner uten å vise vinduer.
+Det kontrollerer også sentrert tabell, forenklet vinnerside, fjernet slagord
+og automatisk rulling i vinnerlisten uten synlige rullefelt.
 Det kan lagre et offscreen-bilde av oppslaget. Dette erstatter ikke full
 interaktiv skjermtest av plassering, operatørflyt og fysisk projektor.
 

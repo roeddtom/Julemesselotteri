@@ -36,6 +36,7 @@ internal static class Program
             {
                 CheckBookletRows();
                 CheckBookletLayout(args.Skip(1).FirstOrDefault());
+                CheckAudienceLayout();
                 CheckBookTicketAnimation();
                 CheckAnimationSpeed();
                 Console.WriteLine("PASS: portrait booklet layout, ticket mapping and reel animations; no windows shown.");
@@ -212,6 +213,7 @@ internal static class Program
             CheckBookTicketAnimation();
             CheckBookletRows();
             CheckBookletLayout();
+            CheckAudienceLayout();
             CheckAudio();
             Console.WriteLine("PASS: animation stages/timing, reveal-now, safe cancellation/end/restart, rounds, logs and audio.");
             return 0;
@@ -474,6 +476,12 @@ internal static class Program
                 "Open pages retain portrait A5 proportions");
         }
         var table = spread.Children.OfType<StackPanel>().Single(p => Grid.GetColumn(p) == 1);
+        var summary = spread.Children.OfType<StackPanel>().Single(p => Grid.GetColumn(p) == 0);
+        Check(summary.Children.Count == 1 && summary.Children[0] is TextBlock { Text: "Vinner\n4000" },
+            "Left page contains only the winner label and ticket number");
+        var tableTop = table.TranslatePoint(new Point(), spread).Y;
+        Check(Math.Abs(tableTop - (spread.ActualHeight - table.ActualHeight) / 2) < 1,
+            "Table is vertically centered on the right page");
         Check(table.Children[0] is Grid && !table.Children.OfType<TextBlock>().Any(),
             "Table page starts with column headings without a repeated book or ticket-range label");
         Check(table.ActualWidth < cover.ActualWidth && table.DesiredSize.Height <= paper.ActualHeight,
@@ -518,6 +526,58 @@ internal static class Program
             SaveScreenshot(booklet, Path.Combine(screenshotDirectory, "booklet-open.png"));
         }
         Check(Application.Current.Windows.Cast<Window>().All(w => !w.IsVisible), "Layout checks never show windows");
+    }
+
+    private static void CheckAudienceLayout()
+    {
+        var audience = new AudienceWindow();
+        try
+        {
+            var round = new LotteryRound
+            {
+                Mode = LotteryMode.Hearts,
+                Books = new(),
+                Prizes = Enumerable.Range(1, 30).Select(n => $"Gevinst {n}").ToList(),
+                Draws = Enumerable.Range(1, 30).Select(n => new DrawRecord
+                {
+                    Number = n,
+                    Prize = $"Gevinst {n}",
+                    RevealedAt = DateTimeOffset.Now
+                }).ToList()
+            };
+            audience.UpdateRound(round);
+            var content = (FrameworkElement)audience.Content;
+            content.Measure(new Size(1600, 900));
+            content.Arrange(new Rect(0, 0, 1600, 900));
+            content.UpdateLayout();
+            var winners = Control<ListBox>(audience, "PublicWinners");
+            var scroller = Descendants(winners).OfType<ScrollViewer>().Single();
+            Check(scroller.ComputedVerticalScrollBarVisibility == Visibility.Collapsed &&
+                scroller.ComputedHorizontalScrollBarVisibility == Visibility.Collapsed,
+                "Public winner list hides scrollbars even when the list overflows");
+            Check(scroller.ScrollableHeight > 0, "Hidden scrollbar preserves programmatic scrolling");
+            scroller.ScrollToBottom();
+            content.UpdateLayout();
+            Check(scroller.VerticalOffset > 0, "Overflowing winner history can scroll without a visible scrollbar");
+            audience.UpdateRound(round);
+            content.UpdateLayout();
+            Check(scroller.VerticalOffset == 0, "Public winner list still scrolls automatically to the newest winner");
+            Check(!Descendants(content).OfType<TextBlock>().Any(text =>
+                text.Text.Contains("Små lodd", StringComparison.OrdinalIgnoreCase)),
+                "Audience layout no longer shows the bottom slogan");
+            Check(!audience.IsVisible, "Audience layout checks never display the window");
+        }
+        finally { audience.Close(); }
+
+        static IEnumerable<DependencyObject> Descendants(DependencyObject parent)
+        {
+            for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, index);
+                yield return child;
+                foreach (var descendant in Descendants(child)) yield return descendant;
+            }
+        }
     }
 
     private static void CheckBookTicketAnimation()

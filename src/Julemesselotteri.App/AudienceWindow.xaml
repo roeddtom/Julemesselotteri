@@ -20,7 +20,6 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="120"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="48"/>
                 </Grid.RowDefinitions>
                 <Grid>
                     <Image x:Name="BrandLogo" Source="{StaticResource YouthCentreLogo}" Width="280" Height="90"
@@ -70,7 +69,8 @@
                             </StackPanel>
                             <ListBox x:Name="PublicWinners" Grid.Row="1" Background="Transparent" BorderThickness="0"
                                      Foreground="{StaticResource Ink}" IsHitTestVisible="False" Focusable="False"
-                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     ScrollViewer.VerticalScrollBarVisibility="Hidden">
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="ListBoxItem">
                                         <Setter Property="Padding" Value="0"/>
@@ -95,8 +95,6 @@
                         </Grid>
                     </Border>
                 </Grid>
-                <TextBlock Grid.Row="2" Text="Små lodd · Stor glede" HorizontalAlignment="Center"
-                           VerticalAlignment="Bottom" FontSize="19" Foreground="{StaticResource BrandCream}"/>
             </Grid>
         </Grid>
     </Viewbox>

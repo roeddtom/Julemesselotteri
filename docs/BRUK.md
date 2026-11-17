@@ -32,6 +32,9 @@ På hovedskjermen holdes det ikke alltid øverst, slik at operatørvinduet er
 tilgjengelig også ved øving uten projektor. Kontroller fokusrekkefølgen med
 PowerPoint på den faktiske PC-en.
 
+Publikumsvinduet har ingen bunntekst med slagord. Vinnerlisten viser ikke
+rullefelt; den oppdateres automatisk med nyeste vinner øverst.
+
 ## Gevinster
 
 Skriv én gevinst per linje for hvert lotteri. Hovedgevinsten skal stå øverst.
@@ -104,6 +107,8 @@ blar i rekonstruerte tabellsider med ti lodd på hver side. Riktig side og rad
 markeres til slutt. For lodd 73 vises bok 2, tabellsiden 71–80 og tredje rad.
 Hver side har stående A5-proporsjoner. Tabellsiden er like bred som forsiden;
 et åpent oppslag består av to slike sider.
+Venstresiden viser bare «Vinner» og loddnummeret. Tabellen er sentrert
+vertikalt på høyresiden.
 Tabellsiden starter med kolonneoverskriftene, uten gjentatt boknummer eller
 loddintervall over tabellen. Disse opplysningene vises ellers i publikumsvinduet.
 Navn- og telefonfeltene fylles med tilfeldig valgte dekorative håndskriftbilder

@@ -22,7 +22,7 @@ public sealed class BookletView : Grid
     private readonly Border _paper;
     private readonly StackPanel _rows = new();
     private readonly TextBlock _coverLabel = new() { FontSize = 19, TextAlignment = TextAlignment.Right };
-    private readonly TextBlock _winner = new() { FontSize = 44, FontWeight = FontWeights.Bold };
+    private readonly TextBlock _winner = new() { FontSize = 44, FontWeight = FontWeights.Bold, TextAlignment = TextAlignment.Center };
     private readonly ScaleTransform _turn = new(1, 1);
     private int _book;
     private int _page;
@@ -61,15 +61,19 @@ public sealed class BookletView : Grid
         var spread = new Grid();
         spread.ColumnDefinitions.Add(new ColumnDefinition());
         spread.ColumnDefinitions.Add(new ColumnDefinition());
-        var summary = new StackPanel { Margin = new Thickness(20, 32, 20, 20) };
-        summary.Children.Add(new TextBlock { Text = "Julemesselotteri", FontSize = 20, FontWeight = FontWeights.Bold });
-        summary.Children.Add(new TextBlock { Text = "Takk for at du støtter\nUngdomssenteret", FontSize = 17, Margin = new Thickness(0, 18, 0, 20) });
+        var summary = new StackPanel { Margin = new Thickness(20), VerticalAlignment = VerticalAlignment.Center };
         summary.Children.Add(_winner);
         spread.Children.Add(summary);
         var spine = new Border { Width = 2, HorizontalAlignment = HorizontalAlignment.Center, Background = (Brush)Application.Current.FindResource("BrandBorder") };
         Grid.SetColumnSpan(spine, 2);
         spread.Children.Add(spine);
-        var table = new StackPanel { Margin = new Thickness(10), RenderTransform = _turn, RenderTransformOrigin = new Point(0, 0.5) };
+        var table = new StackPanel
+        {
+            Margin = new Thickness(10),
+            VerticalAlignment = VerticalAlignment.Center,
+            RenderTransform = _turn,
+            RenderTransformOrigin = new Point(0, 0.5)
+        };
         table.Children.Add(CreateRow("Loddnr", "Navn", "Telefon", true));
         table.Children.Add(_rows);
         Grid.SetColumn(table, 1);
