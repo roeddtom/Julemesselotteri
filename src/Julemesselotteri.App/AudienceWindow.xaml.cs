@@ -59,11 +59,6 @@ public partial class AudienceWindow : Window
                 await SpinAsync(draw.Book, Math.Max(2, ((round.Books.LastTicket - 1) / 50 + 1).ToString().Length),
                     settings, sound, soundOptions, token);
                 BookText.Text = BookLabel(draw);
-                if (bookAnimationEnabled)
-                {
-                    ReelsView.Visibility = Visibility.Collapsed;
-                    VirtualBook.ShowCover(draw, (round.Books.LastTicket - 1) / 50 + 1);
-                }
                 HintText.Text = "Finn fram boka …";
                 await WaitAsync(TimeSpan.FromSeconds(settings.BookPauseSeconds), token);
             }
@@ -78,17 +73,26 @@ public partial class AudienceWindow : Window
                         round.Draws.Where(d => d.Id != draw.Id).Select(d => d.Number))
                     .Where(n => n >= first && n <= last).ToArray();
             }
-            var targetPage = (draw.Number - 1) % 50 / 10 + 1;
             await SpinAsync(draw.Number, Math.Max(4,
                     (round.Mode == LotteryMode.Hearts ? 1000 : round.Books.LastTicket).ToString().Length),
-                settings, sound, soundOptions, token, bookTickets,
-                bookAnimationEnabled && round.Mode == LotteryMode.Books
-                    ? progress => VirtualBook.ShowPage(Math.Min(targetPage, (int)(progress * targetPage) + 1), true)
-                    : null);
+                settings, sound, soundOptions, token, bookTickets);
             StageText.Text = "VINNERNUMMER";
             ShowDigits(draw.Number.ToString(), false);
-            if (bookAnimationEnabled && round.Mode == LotteryMode.Books) VirtualBook.Reveal(draw);
             HintText.Text = "Gratulerer!";
+            if (bookAnimationEnabled && round.Mode == LotteryMode.Books)
+            {
+                await WaitAsync(TimeSpan.FromMilliseconds(600), token);
+                ReelsView.Visibility = Visibility.Collapsed;
+                VirtualBook.ShowCover(draw, (round.Books.LastTicket - 1) / 50 + 1);
+                await WaitAsync(TimeSpan.FromMilliseconds(800), token);
+                var targetPage = (draw.Number - 1) % 50 / 10 + 1;
+                for (var page = 1; page <= targetPage; page++)
+                {
+                    VirtualBook.ShowPage(page, true);
+                    await WaitAsync(TimeSpan.FromMilliseconds(300), token);
+                }
+                VirtualBook.Reveal(draw);
+            }
         }
         finally
         {
@@ -100,8 +104,7 @@ public partial class AudienceWindow : Window
         $"Bok {draw.Book} · Lodd {(draw.Book - 1) * 50 + 1}–{draw.Book * 50}";
 
     private async Task SpinAsync(int result, int digits, AnimationSettings settings, DrawSound sound,
-        Func<(int Volume, bool Muted)> soundOptions, CancellationToken token, int[]? candidates = null,
-        Action<double>? progressChanged = null)
+        Func<(int Volume, bool Muted)> soundOptions, CancellationToken token, int[]? candidates = null)
     {
         var final = result.ToString().PadLeft(digits, '0');
         var watch = Stopwatch.StartNew();
@@ -110,7 +113,6 @@ public partial class AudienceWindow : Window
         {
             token.ThrowIfCancellationRequested();
             var progress = watch.Elapsed.TotalSeconds / duration.TotalSeconds;
-            progressChanged?.Invoke(progress);
             string display;
             if (candidates is not null)
             {

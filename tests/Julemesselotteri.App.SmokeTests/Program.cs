@@ -102,10 +102,23 @@ internal static class Program
             WaitUntil(() => Control<TextBlock>(audience, "BookText").Text == "Bok 2 · Lodd 51–100", "Book and range revealed before ticket");
             Check(audience.DisplayedNumber == "02", "Book pause displays correct book");
             var virtualBook = Control<BookletView>(audience, "VirtualBook");
-            Check(virtualBook.Visibility == Visibility.Visible && virtualBook.Page == 0,
-                "Virtual book cover appears after book selection");
+            Check(virtualBook.Visibility == Visibility.Collapsed && Control<Viewbox>(audience, "ReelsView").IsVisible,
+                "Book pause retains number reels without revealing the booklet");
             Check(engine.State.ActiveRound!.PendingDraw is not null, "Book reveal is not a complete ticket reveal");
             WaitUntil(() => audience.DisplayedStage == "LODDNUMMER", "Ticket follows book pause");
+            WaitUntil(() =>
+            {
+                if (audience.DisplayedStage != "LODDNUMMER") return true;
+                Check(virtualBook.Visibility == Visibility.Collapsed && Control<Viewbox>(audience, "ReelsView").IsVisible,
+                    "Booklet remains hidden throughout ticket selection");
+                return false;
+            }, "Ticket selection completes before booklet animation");
+            Check(audience.DisplayedNumber == "73" && virtualBook.Visibility == Visibility.Collapsed &&
+                Control<Viewbox>(audience, "ReelsView").IsVisible, "Final ticket remains on the reels before the front cover");
+            WaitUntil(() => virtualBook.Visibility == Visibility.Visible, "Front cover follows the completed number draw");
+            Check(virtualBook.Page == 0, "Front cover is shown before opening the booklet");
+            WaitUntil(() => virtualBook.Page == 1, "Cover opens to the first table page");
+            Check(virtualBook.HighlightedNumber is null, "Pages turn before highlighting the winning row");
             WaitUntil(() => engine.State.ActiveRound!.PendingDraw is null, "Book draw finishes");
             Check(bookDraw.Elapsed.TotalSeconds >= 1.3, "Book stages include configured pause");
             Check(audience.DisplayedNumber == "73", "Global ticket shown, not local row");
@@ -141,11 +154,11 @@ internal static class Program
             Check(Control<CheckBox>(window, "BookAnimationBox").IsChecked == true, "Book animation restored after restart");
             Click(window, "DrawButton");
             audience = app.Windows.OfType<AudienceWindow>().Single();
-            WaitUntil(() => Control<TextBlock>(audience, "BookText").Text.StartsWith($"Bok {pending.Book} · Lodd "),
-                "Recovered book reaches its pause");
+            WaitUntil(() => Control<BookletView>(audience, "VirtualBook").Visibility == Visibility.Visible,
+                "Recovered draw reaches its post-draw booklet presentation");
             audience.Close();
             WaitUntil(() => Control<Button>(window, "DrawButton").Content.ToString() == "Fortsett trekning",
-                "Closing audience pauses animation");
+                "Closing audience during booklet presentation pauses animation");
             Check(store.Load()!.ActiveRound!.PendingDraw!.Id == pending.Id, "Closing audience keeps pending winner");
             Click(window, "DrawButton");
             Click(window, "RevealButton");

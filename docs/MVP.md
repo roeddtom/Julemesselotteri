@@ -83,6 +83,10 @@ er innebygd som forside. PDF-en `design\BookLottery_2026_Book_number_1.pdf`
 er referanse for ti-raders tabeller, ikke et dokument som må rendres ved kjøring.
 Programmet viser en stilisert bokåpning og sidevending, ikke fysisk papirkurl.
 Forsidens boknummer/intervall og sluttmarkering genereres dynamisk.
+Talltromlene beholdes gjennom begge trekkdelene og bokpausen. Først etter
+avslørt loddnummer beholdes vinnertallet i 600 ms, så vises forsiden i 800 ms,
+før boka åpnes og blar til riktig
+tabellside med 300 ms per side. Vinnerraden markeres etter sidevendingen.
 Det rekonstruerte oppslaget viser en informasjonsside og aktuell tabellside,
 ikke en nøyaktig gjengivelse av duplex-arkenes trykkoppsett.
 
@@ -90,7 +94,8 @@ Valgt vinner, lagring, bokpause, tidsinnstillinger, avbrytelse og omstart bruker
 samme trekkmotor som før. `Vis nå` og gjenopptatt vinner viser riktig side/rad.
 Tabellsider beregnes fra fem grupper med ti nummer per bok, også ved
 bokgrenser og lodd 4000 i bok 80. Skjermtesten dekker på/av, lagring av valget,
-forside, vinnerrad, sidemapping og gjenoppretting med funksjonen på.
+skjult bok under trekning, forside etter avslørt loddnummer, sidevending,
+vinnerrad, sidemapping og avbrudd/gjenoppretting med funksjonen på.
 
 Begge vinduer følger den medfølgende
 `design\design_manual_misjonssambandet_versjon_1.3.pdf`.
@@ -120,7 +125,7 @@ midlertidige data og åpner ekte vinduer for å kontrollere validering, omvendt
 gevinstrekkefølge, unike nummer, rundebytte, lukking av publikumsvindu og omstart.
 Skjermtesten kontrollerer naturlig varighet, forskjellig tallbyttehastighet,
 bokvisning før globalt loddnummer, bokpause, `Vis nå`, avvist/godkjent tidlig
-avslutning, lukking under bokpause og omstart etter lukking av operatøren.
+avslutning, lukking under bokpresentasjonen og omstart etter lukking av operatøren.
 Lydkontrollen undersøker gyldig WAV-format, volumnivå og stillhet ved null volum,
 og kaller den native avspillingen på lavt nivå før den stoppes.
 Skjermtesten er også kjørt selvstendig med de nøyaktige app-/kjernedll-ene fra
