@@ -560,6 +560,15 @@ internal static class Program
             Check(spinningReels.Length == 3, "A heart draw starts with three reels");
             var content = (FrameworkElement)audience.Content;
             var spinningSize = ReelSize();
+            var heartPrize = Bounds(Control<Viewbox>(audience, "PrizeView"));
+            var prizeArea = Bounds(Control<Grid>(audience, "PrizeArea"));
+            var heartBounds = Bounds(Control<System.Windows.Shapes.Path>(audience, "HeartFrame"));
+            var winnersBounds = Bounds(Control<Border>(audience, "WinnerPanel"));
+            Check(heartPrize.Bottom <= heartBounds.Top && heartPrize.Bottom <= winnersBounds.Top,
+                "Heart prize occupies the space above both the heart and winner list");
+            Check(prizeArea.Right >= winnersBounds.Right && Math.Abs(heartPrize.Left + heartPrize.Width / 2 -
+                (prizeArea.Left + prizeArea.Width / 2)) < 0.01,
+                "Heart prize is centered across the available header above both columns");
             WaitUntil(() => animation.IsCompleted, "The 1000 draw completes");
             animation.GetAwaiter().GetResult();
             Check(audience.DisplayedNumber == "1000" && panel.Children.Count == 4 &&
@@ -576,7 +585,7 @@ internal static class Program
                 new Point(0, slots.ActualHeight), new Point(slots.ActualWidth, slots.ActualHeight) })
             {
                 Check(heart.RenderedGeometry.FillContains(slots.TranslatePoint(corner, heart)),
-                    "All four slot digits fit inside the heart outline");
+                    $"All four slot digits fit inside the heart outline: corner {corner}, heart point {slots.TranslatePoint(corner, heart)}");
             }
             var topLeft = heart.TranslatePoint(new Point(), content);
             var bottomRight = heart.TranslatePoint(new Point(heart.ActualWidth, heart.ActualHeight), content);
@@ -590,11 +599,18 @@ internal static class Program
             audience.UpdateRound(new LotteryRound { Mode = LotteryMode.Books, Books = new(), Prizes = [draw.Prize], Draws = [draw] });
             Check(heart.Visibility == Visibility.Collapsed, "Book lottery does not retain the heart decoration");
             var bookSize = ReelSize();
+            var bookPrize = Bounds(Control<Viewbox>(audience, "PrizeView"));
+            var bookReels = Bounds(Control<Viewbox>(audience, "ReelsView"));
+            if (screenshotDirectory is not null)
+                SaveScreenshot(content, Path.Combine(screenshotDirectory, "audience-books.png"));
+            Check(Math.Abs(bookPrize.Top - heartBounds.Top) < 0.01 && bookPrize.Bottom <= bookReels.Top,
+                "Book prize is higher up and does not overlap the reels");
             Check(Math.Abs(spinningSize.Width - bookSize.Width) < 0.01 &&
                 Math.Abs(spinningSize.Height - bookSize.Height) < 0.01 &&
                 Math.Abs(winningSize.Width - bookSize.Width) < 0.01 &&
                 Math.Abs(winningSize.Height - bookSize.Height) < 0.01,
                 "Hearts use the same rendered reel size as books, even when revealing 1000");
+            Check(bookSize.Height > 230, "Both lotteries use enlarged reels");
             Check(!audience.IsVisible, "Heart layout checks never display the window");
 
             Size ReelSize()
@@ -605,6 +621,9 @@ internal static class Program
                 var reel = (DigitReel)panel.Children[0];
                 return reel.TransformToAncestor(content).TransformBounds(new Rect(reel.RenderSize)).Size;
             }
+
+            Rect Bounds(FrameworkElement element) =>
+                element.TransformToAncestor(content).TransformBounds(new Rect(element.RenderSize));
         }
         finally { audience.Close(); }
     }

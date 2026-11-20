@@ -96,8 +96,9 @@ public partial class AudienceWindow : Window
     private bool SetPresentationMode(LotteryMode mode, bool bookAnimationEnabled)
     {
         var hearts = mode == LotteryMode.Hearts;
-        DrawPanel.VerticalAlignment = hearts ? VerticalAlignment.Top : VerticalAlignment.Center;
-        StageText.Margin = hearts ? new Thickness(0, 0, 0, 20) : new Thickness(0, 32, 0, 20);
+        PrizeArea.Width = hearts ? 1152 : 990;
+        PrizeArea.Margin = hearts ? new Thickness(320, 0, 0, 0) : new Thickness(0, 120, 0, 0);
+        StageText.Margin = hearts ? new Thickness(0, 35, 0, 20) : new Thickness(0, 142, 0, 20);
         BookText.Visibility = hearts ? Visibility.Collapsed : Visibility.Visible;
         return !hearts && bookAnimationEnabled;
     }
