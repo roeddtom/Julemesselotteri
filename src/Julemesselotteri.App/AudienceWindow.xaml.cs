@@ -34,7 +34,7 @@ public partial class AudienceWindow : Window
         else HideBooklet(useBooklet);
         PrizeText.Text = round.PendingDraw?.Prize ?? last?.Prize ?? "";
         PrizeView.Visibility = PrizeText.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
-        StageText.Text = round.PendingDraw is not null ? "TREKNING VENTER" : last is null ? "ER DERE KLARE?" : "VINNERNUMMER";
+        StageText.Text = round.PendingDraw is not null ? "TREKNING VENTER" : last is null ? "ER DERE KLARE?" : DrawLabel(round.Mode);
         ShowDigits(showResult ? FormatNumber(last!.Number, round) : "");
         BookText.Text = showResult && round.Mode == LotteryMode.Books ? $"Bok {last!.Book}" : "";
     }
@@ -57,12 +57,11 @@ public partial class AudienceWindow : Window
             ReelsView.Visibility = Visibility.Visible;
             HeartFrame.Visibility = round.Mode == LotteryMode.Hearts ? Visibility.Visible : Visibility.Collapsed;
             BookText.Text = "";
-            StageText.Text = "LODDNUMMER";
+            StageText.Text = DrawLabel(round.Mode);
             var final = FormatNumber(draw.Number, round);
             var spinning = round.Mode == LotteryMode.Hearts ? final[^HeartSpinDigits..] : final;
             await SpinAsync(spinning, settings, sound, soundOptions, token);
             ShowDigits(final);
-            StageText.Text = "VINNERNUMMER";
             BookText.Text = round.Mode == LotteryMode.Books ? $"Bok {draw.Book}" : "";
             if (useBooklet)
             {
@@ -91,6 +90,8 @@ public partial class AudienceWindow : Window
         number.ToString().PadLeft(round.Mode == LotteryMode.Hearts
             ? HeartSpinDigits
             : Math.Max(4, round.Books.LastTicket.ToString().Length), '0');
+
+    private static string DrawLabel(LotteryMode mode) => mode == LotteryMode.Books ? "LODDNUMMER" : "";
 
     private bool SetPresentationMode(LotteryMode mode, bool bookAnimationEnabled)
     {

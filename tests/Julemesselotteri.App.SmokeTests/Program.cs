@@ -134,7 +134,8 @@ internal static class Program
             Check(engine.State.ActiveRound!.PendingDraw is not null, "Ticket remains pending during animation");
             WaitUntil(() =>
             {
-                if (audience.DisplayedStage != "LODDNUMMER") return true;
+                if (Control<TextBlock>(audience, "BookText").Text.Length > 0) return true;
+                Check(audience.DisplayedStage == "LODDNUMMER", "Book heading stays visible while spinning");
                 Check(virtualBook.Visibility == Visibility.Collapsed && Control<Viewbox>(audience, "ReelsView").IsVisible,
                     "Booklet remains hidden throughout ticket selection");
                 return false;
@@ -142,6 +143,7 @@ internal static class Program
             Check(audience.DisplayedNumber == "0073" && virtualBook.Visibility == Visibility.Collapsed &&
                 Control<Viewbox>(audience, "ReelsView").IsVisible, "Final ticket remains on the reels before the front cover");
             Check(Control<TextBlock>(audience, "BookText").Text == "Bok 2", "Book label omits its ticket range");
+            Check(audience.DisplayedStage == "LODDNUMMER", "Book heading stays visible after the reels stop");
             WaitUntil(() => virtualBook.Visibility == Visibility.Visible, "Front cover follows the completed number draw");
             Check(virtualBook.Page == 0, "Front cover is shown before opening the booklet");
             WaitUntil(() => virtualBook.Page == 1, "Cover opens to the first table page");
@@ -492,11 +494,20 @@ internal static class Program
                 Check(Control<System.Windows.Shapes.Path>(audience, "HeartFrame").Visibility ==
                     (mode == LotteryMode.Hearts ? Visibility.Visible : Visibility.Collapsed),
                     "Only heart lottery draws frame the slot numbers with a heart");
+                Check(audience.DisplayedStage == (mode == LotteryMode.Books ? "LODDNUMMER" : ""),
+                    "Only book draws show the ticket heading while spinning");
                 audience.RevealNow();
                 WaitUntil(() => animation.IsCompleted, "Reveal-now bypasses all independent reels");
                 animation.GetAwaiter().GetResult();
                 Check(audience.DisplayedNumber == (mode == LotteryMode.Hearts ? "073" : "0073"),
                     "Reveal-now still shows the saved winner without resizing");
+                Check(audience.DisplayedStage == (mode == LotteryMode.Books ? "LODDNUMMER" : ""),
+                    "The heading remains unchanged after revealing");
+                round.Draws.Add(draw);
+                draw.RevealedAt = DateTimeOffset.Now;
+                audience.UpdateRound(round, true);
+                Check(audience.DisplayedStage == (mode == LotteryMode.Books ? "LODDNUMMER" : ""),
+                    "Refreshing the result retains the same heading");
             }
         }
         finally { audience.Close(); }
@@ -844,7 +855,7 @@ internal static class Program
             var animation = audience.PlayAsync(round, draw, settings, sound, () => (0, true), CancellationToken.None, true);
             var before = AudienceBounds(audience);
             Check(audience.DisplayedStage == "LODDNUMMER", "Ticket reels start directly without book drawing or pause");
-            WaitUntil(() => audience.DisplayedStage == "VINNERNUMMER", "Ticket number settles");
+            WaitUntil(() => Control<TextBlock>(audience, "BookText").Text.Length > 0, "Ticket number settles");
             var pause = Stopwatch.StartNew();
             var booklet = Control<BookletView>(audience, "VirtualBook");
             WaitUntil(() => booklet.Visibility == Visibility.Visible, "Booklet appears after configured pause");
