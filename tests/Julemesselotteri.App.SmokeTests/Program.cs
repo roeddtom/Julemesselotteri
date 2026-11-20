@@ -401,11 +401,23 @@ internal static class Program
 
     private static void CheckAudio(bool playback = true)
     {
+        var single = DrawSound.MixTicks([0.1], 0.3);
+        var coincident = DrawSound.MixTicks([0.1, 0.1], 0.3);
+        Check(single.Take(2205).All(sample => sample == 0) && single.Any(sample => sample != 0),
+            "A tick starts at its digit crossing, not before");
+        Check(single.Select(sample => sample * 2).SequenceEqual(coincident.Select(sample => (int)sample)),
+            "Coincident crossings on two reels both contribute a tick");
+        var track = DrawSound.MixTicks([0.1, 0.2], 0.3);
+        var resumed = DrawSound.CreateSpinWave(track, 0.15, 100);
+        Check(resumed.AsSpan(44).SequenceEqual(DrawSound.CreateSpinWave(track, 0, 100).AsSpan(44 + 3307 * 2)),
+            "Unmuting during a spin resumes at the current position");
+
         foreach (var win in new[] { false, true })
         {
-            var quiet = DrawSound.CreateWave(25, win);
-            var loud = DrawSound.CreateWave(75, win);
-            var silent = DrawSound.CreateWave(0, win);
+            byte[] Wave(int volume) => win ? DrawSound.CreateWinWave(volume) : DrawSound.CreateSpinWave(track, 0, volume);
+            var quiet = Wave(25);
+            var loud = Wave(75);
+            var silent = Wave(0);
             Check(System.Text.Encoding.ASCII.GetString(loud, 0, 4) == "RIFF", "Audio is a local WAV");
             Check(BitConverter.ToInt32(loud, 40) == loud.Length - 44, "WAV payload length is correct");
             double quietEnergy = 0, loudEnergy = 0;
@@ -415,15 +427,15 @@ internal static class Program
                 loudEnergy += Math.Abs((int)BitConverter.ToInt16(loud, i));
                 Check(BitConverter.ToInt16(silent, i) == 0, "Zero volume is silent");
             }
-            Check(quietEnergy > 0 && loudEnergy / quietEnergy is > 2.9 and < 3.1, "Volume scales recorded audio");
+            Check(quietEnergy > 0 && loudEnergy / quietEnergy is > 2.9 and < 3.1, "Volume scales both sound effects");
         }
         if (!playback) return;
         using var sound = new DrawSound();
-        sound.Spin(1, false);
+        sound.Spin(track, 0, 1, false);
         sound.Stop();
         sound.Win(1, false);
         sound.Stop();
-        sound.Spin(100, true);
+        sound.Spin(track, 0, 100, true);
     }
 
     private static void CheckAnimationSpeed()
@@ -506,6 +518,13 @@ internal static class Program
                     "Every reel starts braking at the configured spin time");
                 Check(result - At(finish - 0.02) is > 0 and < 0.01 && At(finish) == result && At(finish + 1) == result,
                     "Each reel eases into the saved digit and stays there");
+                var crossings = AudienceWindow.DigitCrossings(spin, brake, rate).ToArray();
+                var firstDigit = (int)Math.Floor(At(0)) + 1;
+                Check(crossings.Length == result - firstDigit + 1 && crossings[0] > 0 && crossings[^1] == finish,
+                    "Every centered digit from spin start through lock has exactly one tick");
+                for (var i = 0; i < crossings.Length; i++)
+                    Check(Math.Abs(At(crossings[i]) - (firstDigit + i)) < 0.0001,
+                        "Each tick aligns with its reel's digit crossing");
                 if (position > 0)
                     Check(At(spin + AudienceWindow.BrakeDuration(position - 1)) < result,
                         "A reel is still moving when the more significant reel locks");

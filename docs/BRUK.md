@@ -149,7 +149,8 @@ Under **Visning og lyd** har hvert lotteri egne innstillinger:
   **1000** trekkes.
 - Bokpause: 0–30 sekunder mellom ferdig loddnummer og den valgfrie bokanimasjonen.
   Pausen brukes ikke når bokanimasjonen er avslått.
-- Volum: 0–100. Trommellyden og vinnersignalet er utdrag fra
+- Volum: 0–100. Hvert siffer som passerer på hver trommel gir et kort klikk,
+  inspirert av et sykkelfrihjul. Vinnersignalet er et utdrag fra
   [YleArkistos opptak av en mekanisk spilleautomat](https://freesound.org/people/YleArkisto/sounds/316887/).
   Bruk **Lydløs** for å stoppe lyd umiddelbart.
   Volumet kan endres mens tromlene spinner.

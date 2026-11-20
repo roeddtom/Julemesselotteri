@@ -62,6 +62,7 @@ public partial class AudienceWindow : Window
             ShowDigits(final);
             StageText.Text = "VINNERNUMMER";
             BookText.Text = round.Mode == LotteryMode.Books ? $"Bok {draw.Book}" : "";
+            await WaitAsync(DrawSound.TickLength, token);
             if (useBooklet)
             {
                 await WaitAsync(TimeSpan.FromSeconds(settings.BookPauseSeconds), token);
@@ -119,26 +120,30 @@ public partial class AudienceWindow : Window
         PrepareReels(target.Length);
         var reels = ReelsPanel.Children.Cast<DigitReel>().ToArray();
         var rates = reels.Select(_ => (0.88 + Random.Shared.NextDouble() * 0.24) * 1000 / settings.TickMilliseconds).ToArray();
+        var finish = settings.DurationSeconds + BrakeDuration(reels.Length - 1);
+        var ticks = rates.SelectMany((rate, i) => DigitCrossings(settings.DurationSeconds, BrakeDuration(i), rate));
+        var track = DrawSound.MixTicks(ticks, finish);
         var displayed = new char[reels.Length];
         UpdateFrame(0);
         await Dispatcher.Yield(DispatcherPriority.Background);
         var watch = Stopwatch.StartNew();
-        var finish = settings.DurationSeconds + BrakeDuration(reels.Length - 1);
         try
         {
-            while (!_revealSignal.Task.IsCompleted && watch.Elapsed.TotalSeconds < finish)
+            while (!_revealSignal.Task.IsCompleted)
             {
                 token.ThrowIfCancellationRequested();
-                UpdateFrame(watch.Elapsed.TotalSeconds);
+                var elapsed = watch.Elapsed.TotalSeconds;
+                if (elapsed >= finish) break;
+                UpdateFrame(elapsed);
                 var options = soundOptions();
-                sound.Spin(options.Volume, options.Muted);
+                sound.Spin(track, elapsed, options.Volume, options.Muted);
                 await WaitAsync(TimeSpan.FromMilliseconds(16), token);
             }
             token.ThrowIfCancellationRequested();
         }
         finally
         {
-            sound.Stop();
+            if (token.IsCancellationRequested || _revealSignal.Task.IsCompleted) sound.Stop();
         }
 
         void UpdateFrame(double elapsed)
@@ -156,6 +161,17 @@ public partial class AudienceWindow : Window
     }
 
     internal static double BrakeDuration(int position) => 0.85 + position * 0.45;
+
+    internal static IEnumerable<double> DigitCrossings(double spinDuration, double brakeDuration, double rate)
+    {
+        // Invert SpinPosition at each centered digit, working forward to the lock.
+        var brakingDistance = rate * brakeDuration / 2;
+        var travel = rate * (spinDuration + brakeDuration / 2);
+        for (var distance = (int)Math.Ceiling(travel) - 1; distance >= 0; distance--)
+            yield return distance >= brakingDistance
+                ? (travel - distance) / rate
+                : spinDuration + brakeDuration - Math.Sqrt(2 * brakeDuration * distance / rate);
+    }
 
     internal static double SpinPosition(int result, double elapsed, double spinDuration, double brakeDuration, double rate)
     {
