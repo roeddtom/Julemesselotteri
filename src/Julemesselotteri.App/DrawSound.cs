@@ -1,4 +1,3 @@
-using System.Buffers.Binary;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -8,9 +7,8 @@ public sealed class DrawSound : IDisposable
 {
     private const uint AsyncMemory = 0x0001 | 0x0002 | 0x0004;
     private const int SampleRate = 22050;
-    internal static TimeSpan TickLength { get; } = TimeSpan.FromMilliseconds(14);
     private static readonly short[] Tick = MakeTick();
-    private static readonly Lazy<byte[]> WinWave = new(() => LoadWave("slot-win"));
+    private static readonly short[] PreviewTrack = MixTicks([0, 0.06, 0.14, 0.25, 0.42], 0.42);
     private GCHandle _playing;
     private short[]? _spinTrack;
     private int _spinVolume;
@@ -28,10 +26,10 @@ public sealed class DrawSound : IDisposable
         _spinVolume = volume;
     }
 
-    public void Win(int volume, bool muted)
+    public void Preview(int volume, bool muted)
     {
         if (muted || volume <= 0) Stop();
-        else Play(CreateWinWave(volume));
+        else Play(CreateSpinWave(PreviewTrack, 0, volume));
     }
 
     private void Play(byte[] wave)
@@ -66,7 +64,7 @@ public sealed class DrawSound : IDisposable
     private static short[] MakeTick()
     {
         var noise = new Random(720);
-        var samples = new short[(int)(TickLength.TotalSeconds * SampleRate)];
+        var samples = new short[14 * SampleRate / 1000];
         var lastNoise = 0.0;
         for (var i = 0; i < samples.Length; i++)
         {
@@ -102,28 +100,6 @@ public sealed class DrawSound : IDisposable
         var gain = Math.Clamp(volume, 0, 100) / 100.0;
         for (var i = start; i < track.Length; i++)
             writer.Write((short)(track[i] * gain));
-        return stream.ToArray();
-    }
-
-    internal static byte[] CreateWinWave(int volume)
-    {
-        var wave = (byte[])WinWave.Value.Clone();
-        var gain = Math.Clamp(volume, 0, 100) / 100.0;
-        // The bundled payout is a mono 16-bit PCM WAV with a canonical 44-byte header.
-        for (var i = 44; i < wave.Length; i += 2)
-        {
-            var sample = BinaryPrimitives.ReadInt16LittleEndian(wave.AsSpan(i));
-            BinaryPrimitives.WriteInt16LittleEndian(wave.AsSpan(i), (short)(sample * gain));
-        }
-        return wave;
-    }
-
-    private static byte[] LoadWave(string name)
-    {
-        using var resource = typeof(DrawSound).Assembly.GetManifestResourceStream($"{name}.wav")
-            ?? throw new InvalidOperationException($"Missing bundled audio: {name}.wav");
-        using var stream = new MemoryStream();
-        resource.CopyTo(stream);
         return stream.ToArray();
     }
 

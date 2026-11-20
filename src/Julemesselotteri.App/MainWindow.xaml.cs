@@ -211,8 +211,6 @@ public partial class MainWindow : Window
             cancellation.Token.ThrowIfCancellationRequested();
             _engine.RevealWinner();
             SyncLogs();
-            var options = SoundOptions();
-            _sound.Win(options.Volume, options.Muted);
         }
         catch (OperationCanceledException)
         {
@@ -235,24 +233,18 @@ public partial class MainWindow : Window
 
     private (int Volume, bool Muted) SoundOptions() => ((int)VolumeSlider.Value, MutedBox.IsChecked == true);
 
-    private async void Reveal_Click(object sender, RoutedEventArgs e)
+    private void Reveal_Click(object sender, RoutedEventArgs e)
     {
         if (_drawing)
         {
             _audience?.RevealNow();
             return;
         }
-        AudienceWindow? audience = null;
         Execute(() =>
         {
             _engine.RevealWinner();
             EnsureAudience();
-            audience = _audience;
         });
-        await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
-        if (audience is null || audience != _audience || _drawing) return;
-        var options = SoundOptions();
-        _sound.Win(options.Volume, options.Muted);
     }
 
     private void EndRound_Click(object sender, RoutedEventArgs e)
@@ -354,7 +346,7 @@ public partial class MainWindow : Window
     {
         if (_drawing) return;
         var options = SoundOptions();
-        _sound.Win(options.Volume, options.Muted);
+        _sound.Preview(options.Volume, options.Muted);
     }
 
     private void Window_Closing(object? sender, CancelEventArgs e)

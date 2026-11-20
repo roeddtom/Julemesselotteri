@@ -150,11 +150,10 @@ Under **Visning og lyd** har hvert lotteri egne innstillinger:
 - Bokpause: 0–30 sekunder mellom ferdig loddnummer og den valgfrie bokanimasjonen.
   Pausen brukes ikke når bokanimasjonen er avslått.
 - Volum: 0–100. Hvert siffer som passerer på hver trommel gir et kort klikk,
-  inspirert av et sykkelfrihjul. Vinnersignalet er et utdrag fra
-  [YleArkistos opptak av en mekanisk spilleautomat](https://freesound.org/people/YleArkisto/sounds/316887/).
+  inspirert av et sykkelfrihjul. Ingen egen lyd spilles etter trekningen.
   Bruk **Lydløs** for å stoppe lyd umiddelbart.
   Volumet kan endres mens tromlene spinner.
-- **Test lyd** spiller vinnersignalet med valgt volum/lydløs når ingen animasjon pågår.
+- **Test lyd** spiller noen trommeklikk med valgt volum/lydløs når ingen animasjon pågår.
 
 Tidsendringer gjelder neste trekning. Vinnertallet bestemmes og lagres før
 animasjonen; sifrene underveis påvirker ikke utfallet.
@@ -192,7 +191,7 @@ eksisterende TXT-logger beholdes. Dette er ikke knappen for neste hjerterunde.
 1. Kjør en øvingsrunde og bekreft lesbarhet fra bakerst i rommet.
 2. Kontroller skjermvalg, Windows-skalering og at PowerPoint fortsatt er synlig
    etter at publikumsvinduet lukkes. Bruk **Test lyd** og kontroller både
-   trommellyden og vinnersignalet på den faktiske lydutgangen.
+   trommellyden på den faktiske lydutgangen.
 3. Kontroller at loggmappen kan skrives til og at TXT-filen inneholder riktig
    gevinst og nummer. Ta sikkerhetskopi til en annen fysisk enhet.
 4. Gjennomfør en omstart i øvingsarrangementet og kontroller samme vinnerhistorikk.

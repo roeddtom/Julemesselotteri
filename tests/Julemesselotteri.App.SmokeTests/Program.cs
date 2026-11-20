@@ -412,28 +412,24 @@ internal static class Program
         Check(resumed.AsSpan(44).SequenceEqual(DrawSound.CreateSpinWave(track, 0, 100).AsSpan(44 + 3307 * 2)),
             "Unmuting during a spin resumes at the current position");
 
-        foreach (var win in new[] { false, true })
+        var quiet = DrawSound.CreateSpinWave(track, 0, 25);
+        var loud = DrawSound.CreateSpinWave(track, 0, 75);
+        var silent = DrawSound.CreateSpinWave(track, 0, 0);
+        Check(System.Text.Encoding.ASCII.GetString(loud, 0, 4) == "RIFF", "Audio is a local WAV");
+        Check(BitConverter.ToInt32(loud, 40) == loud.Length - 44, "WAV payload length is correct");
+        double quietEnergy = 0, loudEnergy = 0;
+        for (var i = 44; i < loud.Length; i += 2)
         {
-            byte[] Wave(int volume) => win ? DrawSound.CreateWinWave(volume) : DrawSound.CreateSpinWave(track, 0, volume);
-            var quiet = Wave(25);
-            var loud = Wave(75);
-            var silent = Wave(0);
-            Check(System.Text.Encoding.ASCII.GetString(loud, 0, 4) == "RIFF", "Audio is a local WAV");
-            Check(BitConverter.ToInt32(loud, 40) == loud.Length - 44, "WAV payload length is correct");
-            double quietEnergy = 0, loudEnergy = 0;
-            for (var i = 44; i < loud.Length; i += 2)
-            {
-                quietEnergy += Math.Abs((int)BitConverter.ToInt16(quiet, i));
-                loudEnergy += Math.Abs((int)BitConverter.ToInt16(loud, i));
-                Check(BitConverter.ToInt16(silent, i) == 0, "Zero volume is silent");
-            }
-            Check(quietEnergy > 0 && loudEnergy / quietEnergy is > 2.9 and < 3.1, "Volume scales both sound effects");
+            quietEnergy += Math.Abs((int)BitConverter.ToInt16(quiet, i));
+            loudEnergy += Math.Abs((int)BitConverter.ToInt16(loud, i));
+            Check(BitConverter.ToInt16(silent, i) == 0, "Zero volume is silent");
         }
+        Check(quietEnergy > 0 && loudEnergy / quietEnergy is > 2.9 and < 3.1, "Volume scales the reel clicks");
         if (!playback) return;
         using var sound = new DrawSound();
         sound.Spin(track, 0, 1, false);
         sound.Stop();
-        sound.Win(1, false);
+        sound.Preview(1, false);
         sound.Stop();
         sound.Spin(track, 0, 100, true);
     }

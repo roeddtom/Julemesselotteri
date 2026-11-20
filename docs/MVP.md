@@ -88,8 +88,7 @@ runde. Gevinstmengden kan ikke overstige tilgjengelige lodd. Øvre grense er
 - Selvstendig Windows x64-MVP er publisert med profilen `Portable`
   i `artifacts\win-x64`. Ingen nettbaserte ressurser, mediefiler eller skrifter
   lastes ned ved kjøring. Tromlene gir ett klikk per siffer som passerer.
-  Vinnersignalet fra YleArkistos opptak av en mekanisk spilleautomat er
-  innebygd; lisens og kreditering følger den portable utgaven.
+  Det spilles ingen egen vinnerlyd.
 
 ## Visuell profil
 

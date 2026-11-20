@@ -62,7 +62,6 @@ public partial class AudienceWindow : Window
             ShowDigits(final);
             StageText.Text = "VINNERNUMMER";
             BookText.Text = round.Mode == LotteryMode.Books ? $"Bok {draw.Book}" : "";
-            await WaitAsync(DrawSound.TickLength, token);
             if (useBooklet)
             {
                 await WaitAsync(TimeSpan.FromSeconds(settings.BookPauseSeconds), token);

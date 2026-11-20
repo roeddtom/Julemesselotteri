@@ -5,8 +5,6 @@
     <Resource Include="..\..\design\ungdomssenteret_logo.png" Link="Assets\ungdomssenteret_logo.png" />
     <Resource Include="..\..\design\Forside loddbok.png" Link="Assets\book-cover.png" />
     <Resource Include="..\..\design\bokloddrader\*.png" Link="Assets\book-rows\%(Filename)%(Extension)" />
-    <EmbeddedResource Include="Assets\slot-win.wav" LogicalName="%(Filename)%(Extension)" />
-    <None Update="Assets\SlotAudio-LICENSE.txt" CopyToPublishDirectory="PreserveNewest" TargetPath="SlotAudio-LICENSE.txt" />
   </ItemGroup>
 
   <PropertyGroup>
