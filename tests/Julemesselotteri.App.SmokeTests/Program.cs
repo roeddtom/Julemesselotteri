@@ -479,6 +479,8 @@ internal static class Program
                     Control<TextBlock>(audience, "PrizeText").Text == "", "New round does not expose the first prize");
                 Check(Control<Viewbox>(audience, "ReelsView").Visibility == Visibility.Collapsed &&
                     audience.DisplayedNumber == "", "New round does not show empty number reels");
+                Check(Control<System.Windows.Shapes.Path>(audience, "HeartFrame").Visibility == Visibility.Collapsed,
+                    "New round does not show an empty heart frame");
                 var draw = new DrawRecord { Number = 73, Prize = round.Prizes[0] };
                 var animation = audience.PlayAsync(round, draw,
                     new() { DurationSeconds = 10, TickMilliseconds = 30, BookPauseSeconds = 0 },
@@ -545,6 +547,8 @@ internal static class Program
                 }, CancellationToken.None);
             var spinningReels = panel.Children.Cast<DigitReel>().ToArray();
             Check(spinningReels.Length == 3, "A heart draw starts with three reels");
+            var content = (FrameworkElement)audience.Content;
+            var spinningSize = ReelSize();
             WaitUntil(() => animation.IsCompleted, "The 1000 draw completes");
             animation.GetAwaiter().GetResult();
             Check(audience.DisplayedNumber == "1000" && panel.Children.Count == 4 &&
@@ -552,10 +556,7 @@ internal static class Program
                 "The thousands reel appears only at the reveal, keeping the three original reels");
             draw.RevealedAt = DateTimeOffset.Now;
             audience.UpdateRound(round);
-            var content = (FrameworkElement)audience.Content;
-            content.Measure(new Size(1600, 900));
-            content.Arrange(new Rect(0, 0, 1600, 900));
-            content.UpdateLayout();
+            var winningSize = ReelSize();
             var heart = Control<System.Windows.Shapes.Path>(audience, "HeartFrame");
             var slots = Control<Viewbox>(audience, "SlotsView");
             Check(heart.Visibility == Visibility.Visible && audience.DisplayedNumber == "1000",
@@ -577,7 +578,22 @@ internal static class Program
             }
             audience.UpdateRound(new LotteryRound { Mode = LotteryMode.Books, Books = new(), Prizes = [draw.Prize], Draws = [draw] });
             Check(heart.Visibility == Visibility.Collapsed, "Book lottery does not retain the heart decoration");
+            var bookSize = ReelSize();
+            Check(Math.Abs(spinningSize.Width - bookSize.Width) < 0.01 &&
+                Math.Abs(spinningSize.Height - bookSize.Height) < 0.01 &&
+                Math.Abs(winningSize.Width - bookSize.Width) < 0.01 &&
+                Math.Abs(winningSize.Height - bookSize.Height) < 0.01,
+                "Hearts use the same rendered reel size as books, even when revealing 1000");
             Check(!audience.IsVisible, "Heart layout checks never display the window");
+
+            Size ReelSize()
+            {
+                content.Measure(new Size(1600, 900));
+                content.Arrange(new Rect(0, 0, 1600, 900));
+                content.UpdateLayout();
+                var reel = (DigitReel)panel.Children[0];
+                return reel.TransformToAncestor(content).TransformBounds(new Rect(reel.RenderSize)).Size;
+            }
         }
         finally { audience.Close(); }
     }

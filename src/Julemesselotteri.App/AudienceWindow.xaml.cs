@@ -29,6 +29,7 @@ public partial class AudienceWindow : Window
         var last = round.Draws.LastOrDefault(d => d.RevealedAt is not null);
         var showResult = round.PendingDraw is null && last is not null;
         ReelsView.Visibility = showResult ? Visibility.Visible : Visibility.Collapsed;
+        HeartFrame.Visibility = showResult && round.Mode == LotteryMode.Hearts ? Visibility.Visible : Visibility.Collapsed;
         if (useBooklet && showResult) ShowBookletResult(last!);
         else HideBooklet(useBooklet);
         PrizeText.Text = round.PendingDraw?.Prize ?? last?.Prize ?? "";
@@ -54,6 +55,7 @@ public partial class AudienceWindow : Window
             var useBooklet = SetPresentationMode(round.Mode, bookAnimationEnabled);
             HideBooklet(useBooklet);
             ReelsView.Visibility = Visibility.Visible;
+            HeartFrame.Visibility = round.Mode == LotteryMode.Hearts ? Visibility.Visible : Visibility.Collapsed;
             BookText.Text = "";
             StageText.Text = "LODDNUMMER";
             var final = FormatNumber(draw.Number, round);
@@ -93,10 +95,8 @@ public partial class AudienceWindow : Window
     private bool SetPresentationMode(LotteryMode mode, bool bookAnimationEnabled)
     {
         var hearts = mode == LotteryMode.Hearts;
-        HeartFrame.Visibility = hearts ? Visibility.Visible : Visibility.Collapsed;
-        ReelsView.Height = hearts ? 445 : 230;
-        SlotsView.Height = hearts ? 230 : 220;
-        SlotsView.Margin = hearts ? new Thickness(0, 0, 0, 125) : new Thickness(0);
+        DrawPanel.VerticalAlignment = hearts ? VerticalAlignment.Top : VerticalAlignment.Center;
+        StageText.Margin = hearts ? new Thickness(0, 0, 0, 20) : new Thickness(0, 32, 0, 20);
         BookText.Visibility = hearts ? Visibility.Collapsed : Visibility.Visible;
         return !hearts && bookAnimationEnabled;
     }
