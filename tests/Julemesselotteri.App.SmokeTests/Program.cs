@@ -566,9 +566,13 @@ internal static class Program
             var winnersBounds = Bounds(Control<Border>(audience, "WinnerPanel"));
             Check(heartPrize.Bottom <= heartBounds.Top && heartPrize.Bottom <= winnersBounds.Top,
                 "Heart prize occupies the space above both the heart and winner list");
-            Check(prizeArea.Right >= winnersBounds.Right && Math.Abs(heartPrize.Left + heartPrize.Width / 2 -
-                (prizeArea.Left + prizeArea.Width / 2)) < 0.01,
-                "Heart prize is centered across the available header above both columns");
+            Check(prizeArea.Right >= winnersBounds.Right && Math.Abs(heartPrize.Left - prizeArea.Left) < 0.01,
+                "Heart prize is left-aligned in the available header above both columns");
+            var heartReels = Bounds(Control<Viewbox>(audience, "ReelsView"));
+            Check(Math.Abs(heartReels.Top + heartReels.Height / 2 - (heartBounds.Top + heartBounds.Height / 2)) < 0.01,
+                "Heart reels are vertically centered within the heart");
+            Check(heartBounds.Width < 990 && Math.Abs(heartBounds.Height - 670) < 0.01,
+                "Heart is narrower while retaining its previous height");
             WaitUntil(() => animation.IsCompleted, "The 1000 draw completes");
             animation.GetAwaiter().GetResult();
             Check(audience.DisplayedNumber == "1000" && panel.Children.Count == 4 &&
