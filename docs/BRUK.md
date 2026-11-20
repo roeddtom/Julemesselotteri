@@ -74,11 +74,12 @@ Gevinster som ikke ble trukket, blir ikke loggført som utdelt.
 3. Registrer usolgte globale loddnummer, for eksempel `12-18, 83`.
    Komma, semikolon, mellomrom og linjeskift kan skille intervallene.
 4. Kontroller antall ledige nummer. Velg **Start boklotteri**.
-5. Trekk hver gevinst. Appen viser først boknummeret med bokas nummerintervall,
-   for eksempel **Bok 2 · Lodd 51–100**, venter den innstilte pausen og animerer
-   deretter bare loddnummer i denne boka som er innenfor arrangementets intervall,
-   solgt og ikke allerede trukket i runden. **Vis nå** avslutter hele
-   sekvensen, også hvis bokdelen eller pausen fortsatt pågår.
+5. Trekk hver gevinst. Appen animerer det globale loddnummeret direkte, uten
+   en egen boktrekning eller pause først. Sifrene spinner uavhengig og stopper
+   fra venstre mot høyre. Når tallet er ferdig, vises for eksempel **Bok 2**
+   under resultatet, uten bokas loddintervall. Vinnerlistene viser bare loddnummer
+   og gevinst, ikke boknummer. Mellomtallene er bare animasjon, ikke kvalifiserte
+   lodd. **Vis nå** avslutter hele sekvensen, også eventuell bokanimasjon.
    Slå opp navn/telefon i papirboka; opplysningene skal ikke legges inn i appen.
 6. Avslutt runden etter siste gevinst. Bokvinnere beholdes som utelukket i hele
    arrangementet, også etter omstart og ved oppstart av en ny bokrunde.
@@ -108,11 +109,13 @@ Under **Visning og lyd**, ved innstillingene for boklodd, kan du slå på
 slik at eksisterende oppsett beholder talltromlene. Endringer gjelder neste
 trekning; de endrer ikke en animasjon som allerede pågår.
 
-Talltromlene vises gjennom hele bok- og loddtrekningen, også i bokpausen.
-Først når det endelige loddnummeret er avslørt, viser eksemplet den medfølgende
-forsiden i et kort øyeblikk, åpner boka og
+Talltromlene vises gjennom hele loddtrekningen og den valgfrie bokpausen.
+Når det endelige loddnummeret er avslørt, venter appen den innstilte bokpausen.
+Deretter viser eksemplet den medfølgende
+forsiden under vinnerlisten i 1,6 sekunder, uten å flytte vinnertallet. Eksemplet åpner boka og
 blar i rekonstruerte tabellsider med ti lodd på hver side. Riktig side og rad
-markeres til slutt. For lodd 73 vises bok 2, tabellsiden 71–80 og tredje rad.
+markeres til slutt. Hver side får 0,6 sekunder; både bokåpning og sidebevegelser
+er halvparten så raske som før. For lodd 73 vises bok 2, tabellsiden 71–80 og tredje rad.
 Hver side har stående A5-proporsjoner. Tabellsiden er like bred som forsiden;
 et åpent oppslag består av to slike sider.
 Venstresiden viser bare «Vinner» og loddnummeret. Tabellen er sentrert
@@ -120,33 +123,40 @@ vertikalt på høyresiden.
 Vinnerteksten er ekstra stor, med enda større loddnummer, og skaleres ved
 behov slik at hele tallet får plass på siden.
 Tabellsiden starter med kolonneoverskriftene, uten gjentatt boknummer eller
-loddintervall over tabellen. Disse opplysningene vises ellers i publikumsvinduet.
+loddintervall over tabellen. Bare boknummeret vises under vinnertallet.
 Navn- og telefonfeltene fylles med tilfeldig valgte dekorative håndskriftbilder
 fra de 40 medfølgende radbildene. Hvert bilde dekker begge feltene.
 Samme lodd beholder sitt bilde når boka blar tilbake i samme visning.
 Bildene er ikke knyttet til faktiske loddkjøpere eller vinnere; programmet
 leser ikke håndskrift fra papirbøkene. Slå alltid opp vinneren i den fysiske boka.
-Boknummer og antall bøker på forsiden beregnes fra trekkeoppsettet.
+Forsiden viser bare boknummeret.
 **Vis nå** hopper direkte til riktig side og vinnerrad. Uten valget brukes
 den vanlige tallanimasjonen. Hjertelodd påvirkes ikke.
 
 Under **Visning og lyd** har hvert lotteri egne innstillinger:
 
-- Varighet: 0,5–60 sekunder. For boklodd gjelder dette hver av de to delene;
-  samlet tid er omtrent to ganger varigheten pluss bokpausen. Med animert
-  loddbok kommer forside og sidevending i tillegg etter at tallet er avslørt
-  (omtrent 1,7–2,9 sekunder, inkludert et kort opphold med vinnertallet synlig).
+- Varighet: 0,5–60 sekunder med fullt spinn før alle tromlene begynner å bremse.
+  Sifrene låses fra venstre mot høyre. Tre sifre bruker ca. 1,8 sekunder på
+  nedbremsingen, fire ca. 2,2 sekunder.
+  Med animert loddbok kommer bokpause, forside og sidevending i tillegg.
 - Tallbytte: 30–500 millisekunder. Lavere verdi gir raskere tromler.
-  Hele nummer ruller i stigende rekkefølge og starter på nytt fra begynnelsen
-  av utvalget ved behov. Utelatte lodd hoppes over. Tromlene sakker gradvis av
-  og stopper på den lagrede vinneren, uten et tilfeldig hopp til slutt.
-- Bokpause: 0–30 sekunder mellom ferdig boknummer og loddnummer.
-- Volum: 0–100. Bruk **Lydløs** for å stoppe lyd umiddelbart.
-  Volumendringer brukes på neste lydsignal; de kan gjøres mens trekningen pågår.
+  Alle tromlene ruller kontinuerlig gjennom 0–9 med litt ulik fart.
+  Tromlene stopper på den lagrede vinneren uten et tilfeldig hopp.
+  Antall tromler og plassen rundt dem beholdes når resultatet vises, slik at
+  tallene ikke hopper eller endrer størrelse. Ledende nuller beholdes, for
+  eksempel **073** for hjertelodd 73 og **0073** for boklodd 73; vinnerlistene
+  bruker **73**. Tre tromler spinner for hjertelodd. En fjerde vises bare hvis
+  **1000** trekkes.
+- Bokpause: 0–30 sekunder mellom ferdig loddnummer og den valgfrie bokanimasjonen.
+  Pausen brukes ikke når bokanimasjonen er avslått.
+- Volum: 0–100. Trommellyden og vinnersignalet er utdrag fra
+  [YleArkistos opptak av en mekanisk spilleautomat](https://freesound.org/people/YleArkisto/sounds/316887/).
+  Bruk **Lydløs** for å stoppe lyd umiddelbart.
+  Volumet kan endres mens tromlene spinner.
 - **Test lyd** spiller vinnersignalet med valgt volum/lydløs når ingen animasjon pågår.
 
 Tidsendringer gjelder neste trekning. Vinnertallet bestemmes og lagres før
-animasjonen; den stigende tallsekvensen underveis påvirker ikke utfallet.
+animasjonen; sifrene underveis påvirker ikke utfallet.
 Ingen ekstern musikk eller nettforbindelse brukes. Windows må ha en fungerende
 lydutgang; sjekk også Windows-volum, programvolum og eventuell HDMI-lydutgang.
 
@@ -181,7 +191,7 @@ eksisterende TXT-logger beholdes. Dette er ikke knappen for neste hjerterunde.
 1. Kjør en øvingsrunde og bekreft lesbarhet fra bakerst i rommet.
 2. Kontroller skjermvalg, Windows-skalering og at PowerPoint fortsatt er synlig
    etter at publikumsvinduet lukkes. Bruk **Test lyd** og kontroller både
-   tallbyttelyden og vinnersignalet på den faktiske lydutgangen.
+   trommellyden og vinnersignalet på den faktiske lydutgangen.
 3. Kontroller at loggmappen kan skrives til og at TXT-filen inneholder riktig
    gevinst og nummer. Ta sikkerhetskopi til en annen fysisk enhet.
 4. Gjennomfør en omstart i øvingsarrangementet og kontroller samme vinnerhistorikk.

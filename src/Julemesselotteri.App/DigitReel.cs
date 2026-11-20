@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 
 namespace Julemesselotteri.App;
 
@@ -9,7 +8,6 @@ public sealed class DigitReel : Border
 {
     private readonly TextBlock _previous = CreateNumber();
     private readonly TextBlock _current = CreateNumber();
-    private char _digit = ' ';
 
     public DigitReel()
     {
@@ -37,25 +35,28 @@ public sealed class DigitReel : Border
         RenderTransform = new TranslateTransform()
     };
 
-    public void SetDigit(char digit, bool animate, double interval)
+    public void SetDigit(char digit)
     {
-        if (digit == _digit && animate) return;
-        var old = _digit;
-        _digit = digit;
-        var previousTransform = (TranslateTransform)_previous.RenderTransform;
-        var currentTransform = (TranslateTransform)_current.RenderTransform;
-        previousTransform.BeginAnimation(TranslateTransform.YProperty, null);
-        currentTransform.BeginAnimation(TranslateTransform.YProperty, null);
-        _previous.Text = animate ? old.ToString() : "";
-        _current.Text = digit.ToString();
-        previousTransform.Y = 0;
-        currentTransform.Y = 0;
-        if (!animate) return;
-        var duration = TimeSpan.FromMilliseconds(Math.Max(1, interval * 0.85));
-        var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
-        previousTransform.BeginAnimation(TranslateTransform.YProperty,
-            new DoubleAnimation(0, 220, duration) { EasingFunction = easing });
-        currentTransform.BeginAnimation(TranslateTransform.YProperty,
-            new DoubleAnimation(-220, 0, duration) { EasingFunction = easing });
+        SetGlyph(_previous, digit);
+        _current.Text = "";
+        ((TranslateTransform)_previous.RenderTransform).Y = 0;
+    }
+
+    public char SetSpinPosition(double position)
+    {
+        var index = (int)Math.Floor(position);
+        var fraction = position - index;
+        var digit = (index % 10 + 10) % 10;
+        var next = (digit + 1) % 10;
+        SetGlyph(_previous, (char)('0' + digit));
+        SetGlyph(_current, (char)('0' + next));
+        ((TranslateTransform)_previous.RenderTransform).Y = fraction * Height;
+        ((TranslateTransform)_current.RenderTransform).Y = (fraction - 1) * Height;
+        return (char)('0' + (fraction < 0.5 ? digit : next));
+    }
+
+    private static void SetGlyph(TextBlock text, char digit)
+    {
+        if (text.Text.Length == 0 || text.Text[0] != digit) text.Text = digit.ToString();
     }
 }

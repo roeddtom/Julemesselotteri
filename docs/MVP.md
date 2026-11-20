@@ -11,25 +11,23 @@
 - Hjertelodd: 1–1000, unike nummer innen runden. Samme hjerte kan vinne flere
   ganger via forskjellige nummer. Ny runde nullstiller nummer og beholder gevinster.
   Publikum ser et stort vektorhjerte i profilens rødfarger rundt tromlene fra
-  trekningsstart og rundt det ferdige vinnertallet. Hjerte og tromler skaleres
-  sammen; alle fire sifre får plass innenfor hjertet. Boklodd beholder vanlig
+  trekningsstart og rundt det ferdige vinnertallet. Tre tromler spinner;
+  en fjerde vises først hvis 1000 trekkes. Alle fire får plass i hjertet. Boklodd beholder vanlig
   trommelvisning, og nye runder viser fortsatt ikke tomme tromler.
 - Gevinster: én per linje, hovedgevinst øverst. Trekkes nedenfra og opp.
 - Én trekk-knapp. Separat hastighet og varighet per lotteri.
 - Nye runder skjuler gevinst og tomme talltromler til første trekning starter.
   Et ferdig resultat beholdes fram til neste trekning eller avsluttet runde.
-- Tallanimasjonen går gjennom hele nummer i stigende rekkefølge med omløp.
-  Rekkefølgen planlegges baklengs fra den allerede lagrede vinneren, slik at
-  siste animasjonstrinn er vinneren. Økende trinnvarighet gir gradvis nedbremsing;
-  summen av trinntidene er den konfigurerte varigheten. Sifferbevegelsen følger
-  trinntiden også ved langsom rulling. Dette endrer ikke vinnersjansene.
-  Hjertelodd hopper over rundens tidligere vinnere, og boklodd bruker fortsatt
-  bare kvalifiserte lodd i den trukne boka.
-- Boklodd viser bok først, pause, deretter globalt loddnummer. Ingen radnummer.
-- Etter bokvisning står bokas fulle 50-nummersintervall ved boknummeret, også
-  under og etter loddvisning. Animasjonen velger hele lodd fra den aktuelle boka,
-  begrenset til arrangementets intervall og uten usolgte lodd eller rundens
-  tidligere vinnere. Den lagrede sluttvinneren og like vinnersjanser er uendret.
+- Alle talltromlene spinner kontinuerlig gjennom sifrene 0–9 med litt ulik fart.
+  Etter konfigurert varighet sakker alle av samtidig og låses fra venstre mot høyre.
+  Bevegelsen beregnes baklengs
+  fra den lagrede vinneren uten hopp til slutt. Mellomtallene er dekorative
+  og trenger ikke være kvalifiserte lodd. Dette endrer ikke vinnersjansene.
+- Boklodd animerer globalt loddnummer direkte, uten egen boktrekning eller pause
+  først. Boknummer vises under det ferdige resultatet, uten loddintervall.
+  Vinnerlistene viser loddnummer og gevinst, uten boknummer.
+- Tromlene beholder antall sifre, ledende nuller og plassering etter stopp og
+  oppdatering fra lagret tilstand, slik at resultatet ikke hopper eller endrer størrelse.
 - Vis nå avslutter animasjonen. Avslutt runde stopper videre trekking og lukker
   publikumsvinduet. Siste vinner beholdes til operatøren avslutter.
 - Automatisk vinnerliste etter visning; stort, varmt juletema; lyd med volum/lydløs.
@@ -70,9 +68,9 @@ runde. Gevinstmengden kan ikke overstige tilgjengelige lodd. Øvre grense er
 - Iterasjon 2: operatørvindu med automatisk lagring, låst rundeoppsett, skjermvalg,
   gjenoppretting og rundekontroller.
 - Iterasjon 3: ferdig. Publikumsvindu med skalerbart juletema, animerte
-  talltromler som sakker av, bok-først-sekvens, konfigurerbar pause og lokal lyd.
-  `Vis nå` hopper til vinneren fra begge deler og pausen. Lydløs stopper
-  pågående lyd umiddelbart; volum brukes på neste lydsignal.
+  talltromler som sakker av, direkte loddtrekning, valgfri bokvisning og lokal lyd.
+  `Vis nå` hopper til vinneren fra tromlene og bokvisningen. Lydløs stopper
+  pågående lyd umiddelbart; volum kan endres mens tromlene spinner.
 - Lukking av publikumsvinduet under animasjon setter trekningen på pause uten å
   forkaste vinneren. Lukking av operatørvinduet beholder samme vinner til omstart.
   Tidlig avslutning krever bekreftelse og beholder et allerede valgt vinnertall.
@@ -89,7 +87,8 @@ runde. Gevinstmengden kan ikke overstige tilgjengelige lodd. Øvre grense er
   Skjermoppdatering plasserer også et åpent publikumsvindu på nytt.
 - Selvstendig Windows x64-MVP er publisert med profilen `Portable`
   i `artifacts\win-x64`. Ingen nettbaserte ressurser, mediefiler eller skrifter
-  lastes ned ved kjøring. Lydene syntetiseres lokalt.
+  lastes ned ved kjøring. Lydklipp fra YleArkistos opptak av en mekanisk
+  spilleautomat er innebygd; lisens og kreditering følger den portable utgaven.
 
 ## Visuell profil
 
@@ -101,11 +100,14 @@ og leses ved starten av neste trekning. Den medfølgende `design\Forside loddbok
 er innebygd som forside. PDF-en `design\BookLottery_2026_Book_number_1.pdf`
 er referanse for ti-raders tabeller, ikke et dokument som må rendres ved kjøring.
 Programmet viser en stilisert bokåpning og sidevending, ikke fysisk papirkurl.
-Forsidens boknummer/intervall og sluttmarkering genereres dynamisk.
-Talltromlene beholdes gjennom begge trekkdelene og bokpausen. Først etter
-avslørt loddnummer beholdes vinnertallet i 600 ms, så vises forsiden i 800 ms,
+Forsidens boknummer og sluttmarkering genereres dynamisk.
+Talltromlene beholdes ved bokvisning; boka vises under vinnerlisten.
+Etter avslørt loddnummer beholdes vinnertallet gjennom den konfigurerte
+bokpausen, så vises forsiden i 1600 ms,
 før boka åpnes og blar til riktig
-tabellside med 300 ms per side. Vinnerraden markeres etter sidevendingen.
+tabellside med 600 ms per side. Forsidens innfading og åpning tar 500 ms,
+og sidebevegelsen tar 440 ms, dobbelt så lenge som før.
+Vinnerraden markeres etter sidevendingen.
 Det rekonstruerte oppslaget viser bare «Vinner» og loddnummer på venstresiden,
 og den aktuelle tabellen sentrert vertikalt på høyresiden,
 ikke en nøyaktig gjengivelse av duplex-arkenes trykkoppsett.
@@ -134,8 +136,11 @@ sidebredder, tabelltekstens plass, innebygde radbilder, kolonnedekning,
 stabile radbilder ved sidevending og tallanimasjoner uten å vise vinduer.
 Det kontrollerer også sentrert tabell, forenklet vinnerside, fjernet slagord
 og automatisk rulling i vinnerlisten uten synlige rullefelt.
-Ny-runde-visning, stigende tall med omløp og utelatelser, nedbremsing,
-samlet trinntid, korrekt sluttall og `Vis nå` kontrolleres også uten vinduer.
+Ny-runde-visning, kontinuerlig spinn, felles nedbremsing, forskjøvet sifferstopp,
+direkte loddtrekning, bokpause før valgfri bokvisning,
+tregere sidevending, korrekt sluttall, avbrytelse og `Vis nå` kontrolleres også
+uten vinduer. En regresjonstest kontrollerer at trommelelementer, posisjon og
+størrelse beholdes etter stopp og oppdatering av vinnerlisten.
 Hjerterammen kontrolleres ved trekningsstart og etter stopp, inkludert geometrisk
 plass til fire sifre, skjermgrenser og at boklodd ikke beholder hjertet.
 Det kan lagre et offscreen-bilde av oppslaget. Dette erstatter ikke full

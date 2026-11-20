@@ -78,18 +78,18 @@
                             <TextBlock Text="Tidsendringer gjelder neste trekning. Volum og lydløs virker med en gang."
                                        Style="{StaticResource Caption}"/>
                             <TextBlock Text="Hjertelodd" FontSize="19" FontWeight="SemiBold" Margin="0,20,0,0"/>
-                            <TextBlock Text="Varighet (sekunder)" Style="{StaticResource Caption}"/>
+                            <TextBlock Text="Spinn før nedbremsing (sekunder)" Style="{StaticResource Caption}"/>
                             <TextBox x:Name="HeartDurationBox" TextChanged="SettingsChanged"/>
                             <TextBlock Text="Tid mellom tallbytter (ms) · lavere er raskere" Style="{StaticResource Caption}"/>
                             <TextBox x:Name="HeartSpeedBox" TextChanged="SettingsChanged"/>
                             <TextBlock Text="Boklodd" FontSize="19" FontWeight="SemiBold" Margin="0,12,0,0"/>
                             <CheckBox x:Name="BookAnimationBox" Content="Vis animert loddbok (eksempel)"
                                       Checked="SettingsChanged" Unchecked="SettingsChanged"/>
-                            <TextBlock Text="Varighet per del: bok og loddnummer (sekunder)" Style="{StaticResource Caption}"/>
+                            <TextBlock Text="Spinn før nedbremsing (sekunder)" Style="{StaticResource Caption}"/>
                             <TextBox x:Name="BookDurationBox" TextChanged="SettingsChanged"/>
                             <TextBlock Text="Tid mellom tallbytter (ms)" Style="{StaticResource Caption}"/>
                             <TextBox x:Name="BookSpeedBox" TextChanged="SettingsChanged"/>
-                            <TextBlock Text="Pause etter boknummer (sekunder)" Style="{StaticResource Caption}"/>
+                            <TextBlock Text="Pause før animert loddbok (sekunder)" Style="{StaticResource Caption}"/>
                             <TextBox x:Name="BookPauseBox" TextChanged="SettingsChanged"/>
                             <TextBlock Text="Volum" Style="{StaticResource Caption}"/>
                             <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" TickFrequency="1"
@@ -127,7 +127,7 @@
                             <TextBlock x:Name="CurrentPrize" FontSize="20" FontWeight="SemiBold"/>
                             <TextBlock x:Name="CurrentNumber" Text="—" FontSize="56" FontWeight="Bold"
                                        Foreground="{StaticResource BrandDark}"/>
-                            <TextBlock x:Name="CurrentBook" Foreground="{StaticResource MutedInk}"/>
+                            <TextBlock x:Name="CurrentBook" MinHeight="20" Foreground="{StaticResource MutedInk}"/>
                         </StackPanel>
                     </Border>
                     <StackPanel Grid.Row="3">

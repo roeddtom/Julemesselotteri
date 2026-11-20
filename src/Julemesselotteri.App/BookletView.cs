@@ -126,7 +126,7 @@ public sealed class BookletView : Grid
         _rowImages = Enumerable.Range(0, 50).Select(_ => Random.Shared.Next(Handwriting.Value.Length)).ToArray();
     }
 
-    public void ShowCover(DrawRecord draw, int totalBooks)
+    public void ShowCover(DrawRecord draw)
     {
         Visibility = Visibility.Visible;
         SetBook(draw.Book);
@@ -135,8 +135,8 @@ public sealed class BookletView : Grid
         _winner.Text = "";
         _paper.Visibility = Visibility.Hidden;
         _cover.Visibility = Visibility.Visible;
-        _coverLabel.Text = $"Lodd {(_book - 1) * 50 + 1}–{_book * 50}\nBok {_book}/{totalBooks}";
-        _cover.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(250)));
+        _coverLabel.Text = $"Bok {_book}";
+        _cover.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(500)));
         ((ScaleTransform)_cover.RenderTransform).BeginAnimation(ScaleTransform.ScaleXProperty, null);
     }
 
@@ -155,11 +155,11 @@ public sealed class BookletView : Grid
         if (animate)
         {
             _turn.BeginAnimation(ScaleTransform.ScaleXProperty,
-                new DoubleAnimation(0.05, 1, TimeSpan.FromMilliseconds(220)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
+                new DoubleAnimation(0.05, 1, TimeSpan.FromMilliseconds(440)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
         }
         if (opening && animate)
         {
-            var coverTurn = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(250));
+            var coverTurn = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(500));
             coverTurn.Completed += (_, _) => _cover.Visibility = Visibility.Hidden;
             ((ScaleTransform)_cover.RenderTransform).BeginAnimation(ScaleTransform.ScaleXProperty, coverTurn);
         }

@@ -1,12 +1,14 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Julemesselotteri.Core;
 
 namespace Julemesselotteri.App;
 
 public partial class AudienceWindow : Window
 {
+    private const int HeartSpinDigits = 3;
     private TaskCompletionSource _revealSignal = new();
     public bool IsAnimating { get; private set; }
     public string DisplayedNumber { get; private set; } = "";
@@ -18,26 +20,22 @@ public partial class AudienceWindow : Window
     {
         if (round is null) return;
         var winners = round.Draws.Where(d => d.RevealedAt is not null).Reverse()
-            .Select(d => new WinnerItem(d.Prize, round.Mode == LotteryMode.Books
-                ? $"{d.Number} · Bok {d.Book}" : d.Number.ToString())).ToArray();
+            .Select(d => new WinnerItem(d.Prize, d.Number.ToString())).ToArray();
         PublicWinners.ItemsSource = winners;
         if (winners.Length > 0) PublicWinners.ScrollIntoView(winners[0]);
         WinnerCountText.Text = $"{winners.Length} av {round.Prizes.Count} gevinster";
         if (IsAnimating) return;
-        SetReelMode(round.Mode);
+        var useBooklet = SetPresentationMode(round.Mode, bookAnimationEnabled);
         var last = round.Draws.LastOrDefault(d => d.RevealedAt is not null);
         var showResult = round.PendingDraw is null && last is not null;
-        var showBook = bookAnimationEnabled && round.Mode == LotteryMode.Books && round.PendingDraw is null && last is not null;
-        VirtualBook.Visibility = showBook ? Visibility.Visible : Visibility.Collapsed;
-        ReelsView.Visibility = showResult && !showBook ? Visibility.Visible : Visibility.Collapsed;
-        if (showBook) VirtualBook.Reveal(last!);
+        ReelsView.Visibility = showResult ? Visibility.Visible : Visibility.Collapsed;
+        if (useBooklet && showResult) ShowBookletResult(last!);
+        else HideBooklet(useBooklet);
         PrizeText.Text = round.PendingDraw?.Prize ?? last?.Prize ?? "";
         PrizeView.Visibility = PrizeText.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
         StageText.Text = round.PendingDraw is not null ? "TREKNING VENTER" : last is null ? "ER DERE KLARE?" : "VINNERNUMMER";
-        ShowDigits(showResult ? last!.Number.ToString() : "", false);
-        BookText.Text = round.PendingDraw is null && last is not null && round.Mode == LotteryMode.Books ? BookLabel(last) : "";
-        HintText.Text = last is null || round.PendingDraw is not null ? "Lykke til!" : "";
-        HintText.Visibility = HintText.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
+        ShowDigits(showResult ? FormatNumber(last!.Number, round) : "");
+        BookText.Text = showResult && round.Mode == LotteryMode.Books ? $"Bok {last!.Book}" : "";
     }
 
     public void RevealNow() => _revealSignal.TrySetResult();
@@ -53,59 +51,33 @@ public partial class AudienceWindow : Window
         {
             PrizeText.Text = draw.Prize;
             PrizeView.Visibility = Visibility.Visible;
-            SetReelMode(round.Mode);
-            VirtualBook.Visibility = Visibility.Collapsed;
+            var useBooklet = SetPresentationMode(round.Mode, bookAnimationEnabled);
+            HideBooklet(useBooklet);
             ReelsView.Visibility = Visibility.Visible;
             BookText.Text = "";
-            HintText.Visibility = Visibility.Visible;
-            HintText.Text = "Hvem blir den heldige?";
-            if (round.Mode == LotteryMode.Books)
-            {
-                StageText.Text = "FØRST FINNER VI BOKA";
-                await SpinAsync(draw.Book, Math.Max(2, ((round.Books.LastTicket - 1) / 50 + 1).ToString().Length),
-                    settings, sound, soundOptions, token,
-                    Enumerable.Range(1, (round.Books.LastTicket - 1) / 50 + 1).ToArray());
-                BookText.Text = BookLabel(draw);
-                HintText.Text = "Finn fram boka …";
-                await WaitAsync(TimeSpan.FromSeconds(settings.BookPauseSeconds), token);
-            }
             StageText.Text = "LODDNUMMER";
-            HintText.Text = "Lykke til!";
-            int[] tickets;
-            if (round.Mode == LotteryMode.Books)
-            {
-                var first = (draw.Book - 1) * 50 + 1;
-                var last = draw.Book * 50;
-                tickets = TicketRules.EligibleBooks(round.Books,
-                        round.Draws.Where(d => d.Id != draw.Id).Select(d => d.Number))
-                    .Where(n => n >= first && n <= last).ToArray();
-            }
-            else
-            {
-                var previous = round.Draws.Where(d => d.Id != draw.Id).Select(d => d.Number).ToHashSet();
-                tickets = Enumerable.Range(1, 1000).Where(n => !previous.Contains(n)).ToArray();
-            }
-            await SpinAsync(draw.Number, Math.Max(4,
-                    (round.Mode == LotteryMode.Hearts ? 1000 : round.Books.LastTicket).ToString().Length),
-                settings, sound, soundOptions, token, tickets);
+            var final = FormatNumber(draw.Number, round);
+            var spinning = round.Mode == LotteryMode.Hearts ? final[^HeartSpinDigits..] : final;
+            await SpinAsync(spinning, settings, sound, soundOptions, token);
+            ShowDigits(final);
             StageText.Text = "VINNERNUMMER";
-            ShowDigits(draw.Number.ToString(), false);
-            HintText.Text = "";
-            HintText.Visibility = Visibility.Collapsed;
-            if (bookAnimationEnabled && round.Mode == LotteryMode.Books)
+            BookText.Text = round.Mode == LotteryMode.Books ? $"Bok {draw.Book}" : "";
+            if (useBooklet)
             {
-                await WaitAsync(TimeSpan.FromMilliseconds(600), token);
-                ReelsView.Visibility = Visibility.Collapsed;
-                VirtualBook.ShowCover(draw, (round.Books.LastTicket - 1) / 50 + 1);
-                await WaitAsync(TimeSpan.FromMilliseconds(800), token);
+                await WaitAsync(TimeSpan.FromSeconds(settings.BookPauseSeconds), token);
+                BookletSlot.Visibility = Visibility.Visible;
+                VirtualBook.ShowCover(draw);
+                await WaitAsync(TimeSpan.FromMilliseconds(1600), token);
                 var targetPage = (draw.Number - 1) % 50 / 10 + 1;
                 for (var page = 1; page <= targetPage; page++)
                 {
                     VirtualBook.ShowPage(page, true);
-                    await WaitAsync(TimeSpan.FromMilliseconds(300), token);
+                    await WaitAsync(TimeSpan.FromMilliseconds(600), token);
                 }
-                VirtualBook.Reveal(draw);
+                ShowBookletResult(draw);
             }
+            await Dispatcher.Yield(DispatcherPriority.Background);
+            token.ThrowIfCancellationRequested();
         }
         finally
         {
@@ -113,49 +85,84 @@ public partial class AudienceWindow : Window
         }
     }
 
-    private static string BookLabel(DrawRecord draw) =>
-        $"Bok {draw.Book} · Lodd {(draw.Book - 1) * 50 + 1}–{draw.Book * 50}";
+    private static string FormatNumber(int number, LotteryRound round) =>
+        number.ToString().PadLeft(round.Mode == LotteryMode.Hearts
+            ? HeartSpinDigits
+            : Math.Max(4, round.Books.LastTicket.ToString().Length), '0');
 
-    private void SetReelMode(LotteryMode mode)
+    private bool SetPresentationMode(LotteryMode mode, bool bookAnimationEnabled)
     {
         var hearts = mode == LotteryMode.Hearts;
         HeartFrame.Visibility = hearts ? Visibility.Visible : Visibility.Collapsed;
-        ReelsView.Height = hearts ? 420 : 230;
-        SlotsView.Height = hearts ? 210 : 220;
-        SlotsView.Margin = hearts ? new Thickness(0, 0, 0, 100) : new Thickness(0);
+        ReelsView.Height = hearts ? 445 : 230;
+        SlotsView.Height = hearts ? 230 : 220;
+        SlotsView.Margin = hearts ? new Thickness(0, 0, 0, 125) : new Thickness(0);
         BookText.Visibility = hearts ? Visibility.Collapsed : Visibility.Visible;
+        return !hearts && bookAnimationEnabled;
     }
 
-    private async Task SpinAsync(int result, int digits, AnimationSettings settings, DrawSound sound,
-        Func<(int Volume, bool Muted)> soundOptions, CancellationToken token, int[] candidates)
+    private void HideBooklet(bool reserveSpace)
     {
-        var final = result.ToString().PadLeft(digits, '0');
+        BookletSlot.Visibility = reserveSpace ? Visibility.Hidden : Visibility.Collapsed;
+        VirtualBook.Visibility = Visibility.Collapsed;
+    }
+
+    private void ShowBookletResult(DrawRecord draw)
+    {
+        BookletSlot.Visibility = Visibility.Visible;
+        VirtualBook.Reveal(draw);
+    }
+
+    private async Task SpinAsync(string target, AnimationSettings settings, DrawSound sound,
+        Func<(int Volume, bool Muted)> soundOptions, CancellationToken token)
+    {
+        PrepareReels(target.Length);
+        var reels = ReelsPanel.Children.Cast<DigitReel>().ToArray();
+        var rates = reels.Select(_ => (0.88 + Random.Shared.NextDouble() * 0.24) * 1000 / settings.TickMilliseconds).ToArray();
+        var displayed = new char[reels.Length];
+        UpdateFrame(0);
+        await Dispatcher.Yield(DispatcherPriority.Background);
         var watch = Stopwatch.StartNew();
-        var plannedElapsed = 0.0;
-        foreach (var frame in PlanSpin(result, candidates, settings))
+        var finish = settings.DurationSeconds + BrakeDuration(reels.Length - 1);
+        try
         {
-            if (_revealSignal.Task.IsCompleted) break;
+            while (!_revealSignal.Task.IsCompleted && watch.Elapsed.TotalSeconds < finish)
+            {
+                token.ThrowIfCancellationRequested();
+                UpdateFrame(watch.Elapsed.TotalSeconds);
+                var options = soundOptions();
+                sound.Spin(options.Volume, options.Muted);
+                await WaitAsync(TimeSpan.FromMilliseconds(16), token);
+            }
             token.ThrowIfCancellationRequested();
-            ShowDigits(frame.Number.ToString().PadLeft(digits, '0'), true, frame.Milliseconds);
-            var options = soundOptions();
-            sound.Tick(options.Volume, options.Muted);
-            plannedElapsed += frame.Milliseconds;
-            await WaitAsync(TimeSpan.FromMilliseconds(Math.Max(1, plannedElapsed - watch.Elapsed.TotalMilliseconds)), token);
         }
-        token.ThrowIfCancellationRequested();
-        ShowDigits(final, false);
+        finally
+        {
+            sound.Stop();
+        }
+
+        void UpdateFrame(double elapsed)
+        {
+            var changed = false;
+            for (var i = 0; i < reels.Length; i++)
+            {
+                var position = SpinPosition(target[i] - '0', elapsed, settings.DurationSeconds, BrakeDuration(i), rates[i]);
+                var digit = reels[i].SetSpinPosition(position);
+                changed |= digit != displayed[i];
+                displayed[i] = digit;
+            }
+            if (changed) DisplayedNumber = new string(displayed);
+        }
     }
 
-    internal static (int Number, double Milliseconds)[] PlanSpin(int result, int[] candidates, AnimationSettings settings)
+    internal static double BrakeDuration(int position) => 0.85 + position * 0.45;
+
+    internal static double SpinPosition(int result, double elapsed, double spinDuration, double brakeDuration, double rate)
     {
-        var resultIndex = Array.IndexOf(candidates, result);
-        if (resultIndex < 0) throw new ArgumentException("Vinnernummeret må finnes i animasjonens loddutvalg.");
-        var count = Math.Max(2, (int)Math.Ceiling(settings.DurationSeconds * 1000 / settings.TickMilliseconds / 1.75));
-        var weights = Enumerable.Range(0, count).Select(i => 1 + 3 * Math.Pow((double)i / (count - 1), 3)).ToArray();
-        var scale = settings.DurationSeconds * 1000 / weights.Sum();
-        // Work backwards from the saved winner so consecutive eligible numbers roll forward, wrapping at the end.
-        var first = ((resultIndex - count + 1) % candidates.Length + candidates.Length) % candidates.Length;
-        return weights.Select((weight, i) => (candidates[(first + i) % candidates.Length], weight * scale)).ToArray();
+        // Work back from the saved digit so the continuous motion ends exactly on it.
+        if (elapsed < spinDuration) return result - rate * (spinDuration - elapsed + brakeDuration / 2);
+        var remaining = Math.Max(0, spinDuration + brakeDuration - elapsed);
+        return result - rate * remaining * remaining / (2 * brakeDuration);
     }
 
     private async Task WaitAsync(TimeSpan delay, CancellationToken token)
@@ -166,16 +173,18 @@ public partial class AudienceWindow : Window
         token.ThrowIfCancellationRequested();
     }
 
-    private void ShowDigits(string value, bool animate, double interval = 100)
+    private void ShowDigits(string value)
     {
         DisplayedNumber = value;
-        if (ReelsPanel.Children.Count != value.Length)
-        {
-            ReelsPanel.Children.Clear();
-            foreach (var _ in value) ReelsPanel.Children.Add(new DigitReel());
-        }
+        PrepareReels(value.Length);
         for (var i = 0; i < value.Length; i++)
-            ((DigitReel)ReelsPanel.Children[i]).SetDigit(value[i], animate, interval);
+            ((DigitReel)ReelsPanel.Children[i]).SetDigit(value[i]);
+    }
+
+    private void PrepareReels(int count)
+    {
+        while (ReelsPanel.Children.Count > count) ReelsPanel.Children.RemoveAt(0);
+        while (ReelsPanel.Children.Count < count) ReelsPanel.Children.Insert(0, new DigitReel());
     }
 
     private void Window_KeyDown(object sender, KeyEventArgs e)

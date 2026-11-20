@@ -235,20 +235,24 @@ public partial class MainWindow : Window
 
     private (int Volume, bool Muted) SoundOptions() => ((int)VolumeSlider.Value, MutedBox.IsChecked == true);
 
-    private void Reveal_Click(object sender, RoutedEventArgs e)
+    private async void Reveal_Click(object sender, RoutedEventArgs e)
     {
         if (_drawing)
         {
             _audience?.RevealNow();
             return;
         }
+        AudienceWindow? audience = null;
         Execute(() =>
         {
             _engine.RevealWinner();
             EnsureAudience();
-            var options = SoundOptions();
-            _sound.Win(options.Volume, options.Muted);
+            audience = _audience;
         });
+        await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+        if (audience is null || audience != _audience || _drawing) return;
+        var options = SoundOptions();
+        _sound.Win(options.Volume, options.Muted);
     }
 
     private void EndRound_Click(object sender, RoutedEventArgs e)
@@ -315,15 +319,13 @@ public partial class MainWindow : Window
         ShowAudienceButton.IsEnabled = round is not null;
         RoundTitle.Text = round is null ? "Klar for trekning" : round.Mode == LotteryMode.Hearts ? "Hjertelodd" : "Boklodd";
         RoundStatus.Text = round is null ? "Velg lotteri for å starte en runde."
-            : $"{round.Draws.Count(d => d.RevealedAt is not null)} av {round.Prizes.Count} gevinster vist" +
-                (round.Draws.Count == round.Prizes.Count && round.PendingDraw is null ? " · Avslutt runden når dere er klare." : "");
+            : $"{round.Draws.Count(d => d.RevealedAt is not null)} av {round.Prizes.Count} gevinster vist";
         var latest = round?.Draws.LastOrDefault(d => d.RevealedAt is not null);
         CurrentPrize.Text = round?.PendingDraw?.Prize ?? latest?.Prize ?? round?.Prizes.FirstOrDefault() ?? "Ingen aktiv runde";
         CurrentNumber.Text = _drawing ? "Trekker …" : round?.PendingDraw is not null ? "Lagret" : latest?.Number.ToString() ?? "—";
         CurrentBook.Text = round?.PendingDraw is null && latest is not null && round?.Mode == LotteryMode.Books ? $"Bok {latest.Book}" : "";
         WinnersList.ItemsSource = round?.Draws.Where(d => d.RevealedAt is not null).Reverse()
-            .Select(d => new WinnerItem(d.Prize, round.Mode == LotteryMode.Books
-                ? $"Lodd {d.Number} · Bok {d.Book}" : $"Lodd {d.Number}")).ToArray();
+            .Select(d => new WinnerItem(d.Prize, d.Number.ToString())).ToArray();
         EligibilityText.Text = $"Boklodd: {_engine.EligibleCount(LotteryMode.Books)} ledige nummer etter utelatelser og tidligere vinnere.";
         _audience?.UpdateRound(round, state.Settings.BookAnimationEnabled);
     }

@@ -34,6 +34,7 @@ internal static class Program
             }
             if (args.FirstOrDefault() == "--headless-booklet")
             {
+                CheckStableNumberPresentation();
                 CheckBookletRows();
                 CheckBookletLayout(args.Skip(1).FirstOrDefault());
                 CheckAudienceLayout();
@@ -41,6 +42,8 @@ internal static class Program
                 CheckHeartFrame(args.Skip(1).FirstOrDefault());
                 CheckBookTicketAnimation();
                 CheckAnimationSpeed();
+                CheckBookPresentationTiming();
+                CheckAudio(playback: false);
                 Console.WriteLine("PASS: portrait booklet layout, ticket mapping and reel animations; no windows shown.");
                 return 0;
             }
@@ -98,9 +101,9 @@ internal static class Program
             Control<TextBox>(window, "HeartDurationBox").Text = "0,5";
             var naturalDraw = Stopwatch.StartNew();
             DrawAndWait(window, engine);
-            Check(naturalDraw.Elapsed.TotalSeconds >= 0.45, "Configured heart duration is used");
+            Check(naturalDraw.Elapsed.TotalSeconds >= 2.2, "Heart duration includes the three-reel braking phase");
             Check(engine.State.ActiveRound!.Draws[1].Number == 2, "Unique heart numbers");
-            Check(audience.DisplayedNumber == "2", "Final result stays visible");
+            Check(audience.DisplayedNumber == "002", "Final result stays visible without removing reels");
             var completedRound = engine.State.ActiveRound.Id;
             Click(window, "StartHeartsButton");
             Check(engine.State.ActiveRound!.Id != completedRound, "New heart round replaces completed round without a prompt");
@@ -115,6 +118,7 @@ internal static class Program
             Control<TabControl>(window, "SetupTabs").SelectedIndex = 1;
             Pump();
             Check(Control<CheckBox>(window, "BookAnimationBox").IsVisible, "Book animation option is in display and sound tab");
+            Check(Control<CheckBox>(window, "BookAnimationBox").IsChecked == false, "Book animation starts disabled");
             Control<CheckBox>(window, "BookAnimationBox").IsChecked = true;
             Control<TabControl>(window, "SetupTabs").SelectedIndex = 0;
             Click(window, "StartBooksButton");
@@ -122,14 +126,12 @@ internal static class Program
             audience = app.Windows.OfType<AudienceWindow>().Single();
             var bookDraw = Stopwatch.StartNew();
             Click(window, "DrawButton");
-            Check(audience.DisplayedStage == "FØRST FINNER VI BOKA", "Book is animated first");
-            WaitUntil(() => Control<TextBlock>(audience, "BookText").Text == "Bok 2 · Lodd 51–100", "Book and range revealed before ticket");
-            Check(audience.DisplayedNumber == "02", "Book pause displays correct book");
+            Check(audience.DisplayedStage == "LODDNUMMER", "Book lottery draws the ticket directly");
+            Check(Control<TextBlock>(audience, "BookText").Text == "", "Book is not revealed before the ticket");
             var virtualBook = Control<BookletView>(audience, "VirtualBook");
             Check(virtualBook.Visibility == Visibility.Collapsed && Control<Viewbox>(audience, "ReelsView").IsVisible,
-                "Book pause retains number reels without revealing the booklet");
-            Check(engine.State.ActiveRound!.PendingDraw is not null, "Book reveal is not a complete ticket reveal");
-            WaitUntil(() => audience.DisplayedStage == "LODDNUMMER", "Ticket follows book pause");
+                "Ticket drawing shows the reels without revealing the booklet");
+            Check(engine.State.ActiveRound!.PendingDraw is not null, "Ticket remains pending during animation");
             WaitUntil(() =>
             {
                 if (audience.DisplayedStage != "LODDNUMMER") return true;
@@ -137,16 +139,21 @@ internal static class Program
                     "Booklet remains hidden throughout ticket selection");
                 return false;
             }, "Ticket selection completes before booklet animation");
-            Check(audience.DisplayedNumber == "73" && virtualBook.Visibility == Visibility.Collapsed &&
+            Check(audience.DisplayedNumber == "0073" && virtualBook.Visibility == Visibility.Collapsed &&
                 Control<Viewbox>(audience, "ReelsView").IsVisible, "Final ticket remains on the reels before the front cover");
+            Check(Control<TextBlock>(audience, "BookText").Text == "Bok 2", "Book label omits its ticket range");
             WaitUntil(() => virtualBook.Visibility == Visibility.Visible, "Front cover follows the completed number draw");
             Check(virtualBook.Page == 0, "Front cover is shown before opening the booklet");
             WaitUntil(() => virtualBook.Page == 1, "Cover opens to the first table page");
             Check(virtualBook.HighlightedNumber is null, "Pages turn before highlighting the winning row");
             WaitUntil(() => engine.State.ActiveRound!.PendingDraw is null, "Book draw finishes");
-            Check(bookDraw.Elapsed.TotalSeconds >= 1.3, "Book stages include configured pause");
-            Check(audience.DisplayedNumber == "73", "Global ticket shown, not local row");
+            Check(bookDraw.Elapsed.TotalSeconds >= 6.4, "Draw includes staggered digit stops, booklet pause and slower pages");
+            Check(audience.DisplayedNumber == "0073", "Global ticket shown with stable reel count, not local row");
             Check(Control<TextBlock>(window, "CurrentBook").Text == "Bok 2", "Book displayed with global ticket");
+            Check(Control<ListView>(window, "WinnersList").Items.Cast<WinnerItem>().Single().NumberText == "73",
+                "Operator winner history contains only the ticket number");
+            Check(Control<ListBox>(audience, "PublicWinners").Items.Cast<WinnerItem>().Single().NumberText == "73",
+                "Public winner history contains only the ticket number");
             Check(virtualBook.Page == 3 && virtualBook.HighlightedNumber == 73,
                 "Virtual book opens to third table page and highlights ticket 73");
             if (args.Length > 0)
@@ -186,7 +193,7 @@ internal static class Program
             Check(store.Load()!.ActiveRound!.PendingDraw!.Id == pending.Id, "Closing audience keeps pending winner");
             Click(window, "DrawButton");
             Click(window, "RevealButton");
-            WaitUntil(() => recovered.State.ActiveRound?.PendingDraw is null, "Book reveal-now skips both stages");
+            WaitUntil(() => recovered.State.ActiveRound?.PendingDraw is null, "Reveal-now skips ticket reels and booklet presentation");
             Check(recovered.State.ActiveRound!.Draws.Last().Id == pending.Id, "Same pending winner recovered");
             Check(recovered.State.ActiveRound.PendingDraw is null, "Recovery reveal persisted");
             Check(Control<BookletView>(app.Windows.OfType<AudienceWindow>().Single(), "VirtualBook").HighlightedNumber == pending.Number,
@@ -212,6 +219,7 @@ internal static class Program
             Check(store.Load()!.ActiveRound!.PendingDraw!.Id == interrupted, "Closing operator preserves interrupted selection");
             Check(new LotteryEngine(store).SelectWinner().Id == interrupted, "Restart after operator close does not reroll");
             CheckAnimationSpeed();
+            CheckStableNumberPresentation();
             CheckBookTicketAnimation();
             CheckBookletRows();
             CheckBookletLayout();
@@ -261,12 +269,12 @@ internal static class Program
         WaitUntil(() => engine.State.ActiveRound?.PendingDraw is null, "Draw completes");
     }
 
-    private static void WaitUntil(Func<bool> condition, string message)
+    private static void WaitUntil(Func<bool> condition, string message, double timeoutSeconds = 20)
     {
         var watch = Stopwatch.StartNew();
         while (!condition())
         {
-            if (watch.Elapsed.TotalSeconds > 8) throw new TimeoutException(message);
+            if (watch.Elapsed.TotalSeconds > timeoutSeconds) throw new TimeoutException(message);
             var frame = new DispatcherFrame();
             var timer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(10) };
             timer.Tick += (_, _) => { timer.Stop(); frame.Continue = false; };
@@ -391,7 +399,7 @@ internal static class Program
         return new Rect(bounds.Left, bounds.Top, bounds.Right - bounds.Left, bounds.Bottom - bounds.Top);
     }
 
-    private static void CheckAudio()
+    private static void CheckAudio(bool playback = true)
     {
         foreach (var win in new[] { false, true })
         {
@@ -407,14 +415,15 @@ internal static class Program
                 loudEnergy += Math.Abs((int)BitConverter.ToInt16(loud, i));
                 Check(BitConverter.ToInt16(silent, i) == 0, "Zero volume is silent");
             }
-            Check(quietEnergy > 0 && loudEnergy / quietEnergy is > 2.9 and < 3.1, "Volume scales synthesized audio");
+            Check(quietEnergy > 0 && loudEnergy / quietEnergy is > 2.9 and < 3.1, "Volume scales recorded audio");
         }
+        if (!playback) return;
         using var sound = new DrawSound();
-        sound.Tick(1, false);
+        sound.Spin(1, false);
         sound.Stop();
         sound.Win(1, false);
         sound.Stop();
-        sound.Tick(100, true);
+        sound.Spin(100, true);
     }
 
     private static void CheckAnimationSpeed()
@@ -423,21 +432,29 @@ internal static class Program
         using var sound = new DrawSound();
         var round = new LotteryRound { Mode = LotteryMode.Hearts, Prizes = ["Gevinst"], Books = new() };
         var draw = new DrawRecord { Number = 73, Prize = "Gevinst" };
-        var fastTicks = 0;
-        var slowTicks = 0;
-        var fast = audience.PlayAsync(round, draw, new() { DurationSeconds = 0.6, TickMilliseconds = 30 },
-            sound, () => { fastTicks++; return (0, true); }, CancellationToken.None);
-        WaitUntil(() => fast.IsCompleted, "Fast animation completes");
-        fast.GetAwaiter().GetResult();
-        var slow = audience.PlayAsync(round, draw, new() { DurationSeconds = 0.6, TickMilliseconds = 500 },
-            sound, () => { slowTicks++; return (0, true); }, CancellationToken.None);
-        WaitUntil(() => slow.IsCompleted, "Slow animation completes");
-        slow.GetAwaiter().GetResult();
-        Check(fastTicks > slowTicks, "Configured speed changes reel movement frequency independently of duration");
-        Check(audience.DisplayedNumber == "73", "Animation speed cannot change selected winner");
-        Check(Control<TextBlock>(audience, "HintText").Visibility == Visibility.Collapsed,
-            "Completed heart animation does not show congratulations");
+        Check(CountChanges(30) > CountChanges(500),
+            "Configured speed changes reel movement frequency independently of duration");
+        Check(audience.DisplayedNumber == "073", "Animation speed cannot change selected winner");
         audience.Close();
+
+        int CountChanges(int tickMilliseconds)
+        {
+            var previous = "";
+            var changes = 0;
+            var checkedAudio = false;
+            var animation = audience.PlayAsync(round, draw, new() { DurationSeconds = 0.6, TickMilliseconds = tickMilliseconds },
+                sound, () =>
+                {
+                    checkedAudio = true;
+                    if (previous != audience.DisplayedNumber) changes++;
+                    previous = audience.DisplayedNumber;
+                    return (0, true);
+                }, CancellationToken.None);
+            Check(!checkedAudio && audience.DisplayedNumber.Length == 3, "All heart reels are populated before the spin sound");
+            WaitUntil(() => animation.IsCompleted, "Animation completes");
+            animation.GetAwaiter().GetResult();
+            return changes;
+        }
     }
 
     private static void CheckIdleRoundAndSpinPlan()
@@ -466,30 +483,32 @@ internal static class Program
                     (mode == LotteryMode.Hearts ? Visibility.Visible : Visibility.Collapsed),
                     "Only heart lottery draws frame the slot numbers with a heart");
                 audience.RevealNow();
-                WaitUntil(() => animation.IsCompleted, "Reveal-now bypasses the ascending animation");
+                WaitUntil(() => animation.IsCompleted, "Reveal-now bypasses all independent reels");
                 animation.GetAwaiter().GetResult();
-                Check(audience.DisplayedNumber == "73", "Reveal-now still shows the saved winner");
+                Check(audience.DisplayedNumber == (mode == LotteryMode.Hearts ? "073" : "0073"),
+                    "Reveal-now still shows the saved winner without resizing");
             }
         }
         finally { audience.Close(); }
 
-        foreach (var candidates in new[] { new[] { 1 }, new[] { 51, 53, 56, 100 }, Enumerable.Range(1, 1000).ToArray() })
+        foreach (var result in new[] { 0, 3, 9 })
         {
-            foreach (var result in new[] { candidates[0], candidates[^1] }.Distinct())
+            for (var position = 0; position < 4; position++)
             {
-                var settings = new AnimationSettings { DurationSeconds = 0.6, TickMilliseconds = 30 };
-                var frames = AudienceWindow.PlanSpin(result, candidates, settings);
-                Check(frames[^1].Number == result, "Ascending reel plan stops on the saved winner without a final jump");
-                Check(Math.Abs(frames.Sum(frame => frame.Milliseconds) - 600) < 0.01,
-                    "Reel plan preserves the configured duration");
-                for (var index = 1; index < frames.Length; index++)
-                {
-                    var previous = Array.IndexOf(candidates, frames[index - 1].Number);
-                    Check(frames[index].Number == candidates[(previous + 1) % candidates.Length],
-                        "Frames advance in eligible ascending order, wrapping and skipping excluded tickets");
-                    Check(frames[index].Milliseconds > frames[index - 1].Milliseconds,
-                        "Each successive frame slows before the winner");
-                }
+                const double spin = 2;
+                var rate = 28 + position * 2;
+                var brake = AudienceWindow.BrakeDuration(position);
+                var finish = spin + brake;
+                double At(double time) => AudienceWindow.SpinPosition(result, time, spin, brake, rate);
+                Check(Math.Abs(At(0.1) - At(0) - rate * 0.1) < 0.0001,
+                    "Each reel rolls immediately at its own rate");
+                Check(At(spin + 0.1) - At(spin) < At(spin) - At(spin - 0.1),
+                    "Every reel starts braking at the configured spin time");
+                Check(result - At(finish - 0.02) is > 0 and < 0.01 && At(finish) == result && At(finish + 1) == result,
+                    "Each reel eases into the saved digit and stays there");
+                if (position > 0)
+                    Check(At(spin + AudienceWindow.BrakeDuration(position - 1)) < result,
+                        "A reel is still moving when the more significant reel locks");
             }
         }
     }
@@ -499,8 +518,24 @@ internal static class Program
         var audience = new AudienceWindow();
         try
         {
-            var draw = new DrawRecord { Number = 1000, Prize = "Hovedgevinst", RevealedAt = DateTimeOffset.Now };
+            using var sound = new DrawSound();
+            var draw = new DrawRecord { Number = 1000, Prize = "Hovedgevinst" };
             var round = new LotteryRound { Mode = LotteryMode.Hearts, Books = new(), Prizes = [draw.Prize], Draws = [draw] };
+            var panel = Control<StackPanel>(audience, "ReelsPanel");
+            var animation = audience.PlayAsync(round, draw, new() { DurationSeconds = 0.5, TickMilliseconds = 30 },
+                sound, () =>
+                {
+                    Check(panel.Children.Count == 3, "Even a draw of 1000 spins only three heart reels");
+                    return (0, true);
+                }, CancellationToken.None);
+            var spinningReels = panel.Children.Cast<DigitReel>().ToArray();
+            Check(spinningReels.Length == 3, "A heart draw starts with three reels");
+            WaitUntil(() => animation.IsCompleted, "The 1000 draw completes");
+            animation.GetAwaiter().GetResult();
+            Check(audience.DisplayedNumber == "1000" && panel.Children.Count == 4 &&
+                panel.Children.Cast<DigitReel>().Skip(1).SequenceEqual(spinningReels),
+                "The thousands reel appears only at the reveal, keeping the three original reels");
+            draw.RevealedAt = DateTimeOffset.Now;
             audience.UpdateRound(round);
             var content = (FrameworkElement)audience.Content;
             content.Measure(new Size(1600, 900));
@@ -538,7 +573,7 @@ internal static class Program
         foreach (var number in new[] { 1, 10, 11, 20, 21, 30, 31, 40, 41, 50, 51, 73, 4000 })
         {
             var draw = new DrawRecord { Number = number, Prize = "Gevinst" };
-            booklet.ShowCover(draw, 80);
+            booklet.ShowCover(draw);
             Check(booklet.Page == 0 && booklet.HighlightedNumber is null, "Cover resets prior highlighted row");
             booklet.Reveal(draw);
             Check(booklet.Page == (number - 1) % 50 / 10 + 1 && booklet.HighlightedNumber == number,
@@ -548,15 +583,18 @@ internal static class Program
 
     private static void CheckBookletLayout(string? screenshotDirectory = null)
     {
+        var visibleWindows = Application.Current.Windows.Cast<Window>().Where(window => window.IsVisible).ToArray();
         var booklet = new BookletView();
         var draw = new DrawRecord { Number = 4000, Prize = "Gevinst" };
-        booklet.ShowCover(draw, 80);
+        booklet.ShowCover(draw);
         var size = new Size(booklet.Width, booklet.Height);
         booklet.Measure(size);
         booklet.Arrange(new Rect(size));
         booklet.UpdateLayout();
         var cover = booklet.Children.OfType<Border>().Single(b =>
             b.Child is Grid grid && grid.Children.OfType<Image>().Any());
+        Check(((Grid)cover.Child).Children.OfType<TextBlock>().Single().Text == "Bok 80",
+            "Book cover shows its number without a range or total");
         Check(Math.Abs(cover.ActualHeight / cover.ActualWidth - 210.0 / 148) < 0.01,
             "Cover has portrait A5 proportions");
         booklet.Reveal(draw);
@@ -633,7 +671,8 @@ internal static class Program
             Directory.CreateDirectory(screenshotDirectory);
             SaveScreenshot(booklet, Path.Combine(screenshotDirectory, "booklet-open.png"));
         }
-        Check(Application.Current.Windows.Cast<Window>().All(w => !w.IsVisible), "Layout checks never show windows");
+        Check(Application.Current.Windows.Cast<Window>().All(window => !window.IsVisible || visibleWindows.Contains(window)),
+            "Layout checks do not show additional windows");
     }
 
     private static void CheckAudienceLayout()
@@ -673,8 +712,10 @@ internal static class Program
             Check(!Descendants(content).OfType<TextBlock>().Any(text =>
                 text.Text.Contains("Små lodd", StringComparison.OrdinalIgnoreCase)),
                 "Audience layout no longer shows the bottom slogan");
-            Check(Control<TextBlock>(audience, "HintText").Visibility == Visibility.Collapsed,
-                "Completed draw hides the congratulations text and its layout space");
+            Check(!Descendants(content).OfType<TextBlock>().Any(text =>
+                text.Text.Contains("Takk for at du støtter", StringComparison.OrdinalIgnoreCase)),
+                "The winner list has no thank-you footer");
+            Check(audience.FindName("HintText") is null, "The good-luck footer is removed for all draw stages");
             Check(!Descendants(content).OfType<TextBlock>().Any(text =>
                 text.Text is "JULEMESSELOTTERI" or "Hjertelodd" or "Boklodd" or "NÅ TREKKER VI"),
                 "Extra audience headings are removed");
@@ -717,39 +758,146 @@ internal static class Program
                 ]
             };
             var frames = 0;
-            var expectedFrames = AudienceWindow.PlanSpin(number,
-                TicketRules.EligibleBooks(round.Books, [previous]).Where(n => n >= first && n <= last).ToArray(),
-                new() { DurationSeconds = 0.5, TickMilliseconds = 30, BookPauseSeconds = 0 });
+            var ticketWatch = new Stopwatch();
+            var rightChangesAfterLeftStops = 0;
+            var previousDigits = "";
             var animation = audience.PlayAsync(round, draw,
                 new() { DurationSeconds = 0.5, TickMilliseconds = 30, BookPauseSeconds = 0 },
                 sound, () =>
                 {
                     if (audience.DisplayedStage == "LODDNUMMER")
                     {
-                        var shown = int.Parse(audience.DisplayedNumber);
-                        Check(shown == expectedFrames[frames].Number, "Live ticket frames follow the ascending reel plan");
-                        Check(shown >= first && shown <= last && shown <= 125, "Animated tickets stay inside the drawn book and event range");
-                        Check(shown != excluded && shown != previous, "Animated tickets exclude unsold tickets and earlier winners");
-                        Check(Control<TextBlock>(audience, "BookText").Text == $"Bok {book} · Lodd {first}–{last}",
-                            "Book range remains visible during ticket animation");
+                        if (!ticketWatch.IsRunning) ticketWatch.Start();
+                        var shown = audience.DisplayedNumber;
+                        Check(shown.Length == 4 && shown.All(char.IsAsciiDigit), "All four reels display decimal digits");
+                        if (ticketWatch.Elapsed.TotalSeconds > 0.5 + AudienceWindow.BrakeDuration(0))
+                        {
+                            Check(shown[0] == number.ToString("D4")[0], "Leftmost reel stays stopped while the others spin");
+                            if (previousDigits.Length == 4 && shown[3] != previousDigits[3])
+                                rightChangesAfterLeftStops++;
+                        }
+                        previousDigits = shown;
+                        Check(Control<TextBlock>(audience, "BookText").Text == "",
+                            "Book number remains hidden until all ticket digits stop");
                         frames++;
                     }
                     return (0, true);
                 }, CancellationToken.None);
-            WaitUntil(() => animation.IsCompleted, "Constrained book animation completes");
+            Check(audience.DisplayedStage == "LODDNUMMER", "Book lottery skips the separate book-number drawing");
+            WaitUntil(() => animation.IsCompleted, "Independent ticket reels complete");
             animation.GetAwaiter().GetResult();
-            Check(frames > 1, "Constrained ticket frames were checked");
-            Check(audience.DisplayedNumber == number.ToString(), "Animation ends on the saved winner");
-            Check(Control<TextBlock>(audience, "HintText").Visibility == Visibility.Collapsed,
-                "Completed book animation does not show congratulations");
+            Check(frames > 1 && rightChangesAfterLeftStops > 1, "Rightmost digit continues spinning after the leftmost stops");
+            Check(ticketWatch.Elapsed.TotalSeconds >= 2.5, "Ticket reels retain the staggered braking phase");
+            Check(audience.DisplayedNumber == number.ToString("D4"), "Animation ends on the saved winner without resizing");
+            Check(Control<TextBlock>(audience, "BookText").Text == $"Bok {book}",
+                "Book number without range appears beneath the completed result");
             Check(Control<BookletView>(audience, "VirtualBook").Visibility == Visibility.Collapsed,
                 "Disabled option retains number-only animation");
             draw.RevealedAt = DateTimeOffset.Now;
             audience.UpdateRound(round);
-            Check(Control<TextBlock>(audience, "BookText").Text == $"Bok {book} · Lodd {first}–{last}",
-                "Range remains beside the book after reveal and refresh");
+            Check(Control<TextBlock>(audience, "BookText").Text == $"Bok {book}",
+                "Book label without range remains after reveal and refresh");
             audience.Close();
         }
+    }
+
+    private static void CheckBookPresentationTiming()
+    {
+        var audience = new AudienceWindow();
+        using var sound = new DrawSound();
+        try
+        {
+            var draw = new DrawRecord { Number = 1, Prize = "Gevinst" };
+            var round = new LotteryRound { Mode = LotteryMode.Books, Books = new(), Prizes = [draw.Prize], Draws = [draw] };
+            var settings = new AnimationSettings { DurationSeconds = 0.5, TickMilliseconds = 30, BookPauseSeconds = 0.4 };
+            var animation = audience.PlayAsync(round, draw, settings, sound, () => (0, true), CancellationToken.None, true);
+            var before = AudienceBounds(audience);
+            Check(audience.DisplayedStage == "LODDNUMMER", "Ticket reels start directly without book drawing or pause");
+            WaitUntil(() => audience.DisplayedStage == "VINNERNUMMER", "Ticket number settles");
+            var pause = Stopwatch.StartNew();
+            var booklet = Control<BookletView>(audience, "VirtualBook");
+            WaitUntil(() => booklet.Visibility == Visibility.Visible, "Booklet appears after configured pause");
+            Check(pause.Elapsed.TotalSeconds >= 0.35, "Configured pause still precedes optional booklet");
+            Check(AudienceBounds(audience).SequenceEqual(before), "Booklet cover does not replace or move the reels");
+            pause.Restart();
+            WaitUntil(() => booklet.Page == 1, "Slower cover opens");
+            Check(pause.Elapsed.TotalSeconds >= 1.55, "Cover is displayed for twice the previous duration");
+            pause.Restart();
+            WaitUntil(() => animation.IsCompleted, "Slower page turn completes");
+            animation.GetAwaiter().GetResult();
+            Check(pause.Elapsed.TotalSeconds >= 0.55 && booklet.HighlightedNumber == 1,
+                "Page turn lasts twice as long before revealing the saved winner");
+            draw.RevealedAt = DateTimeOffset.Now;
+            audience.UpdateRound(round, true);
+            Check(AudienceBounds(audience).SequenceEqual(before), "Open booklet and winner refresh preserve the draw layout");
+
+            round = new LotteryRound { Mode = LotteryMode.Hearts, Books = new(), Prizes = [draw.Prize], Draws = [draw] };
+            animation = audience.PlayAsync(round, draw, settings, sound, () => (0, true), CancellationToken.None);
+            pause.Restart();
+            WaitUntil(() => pause.Elapsed.TotalSeconds >= 1.45, "Leftmost digit stops before revealing remaining reels");
+            Check(!animation.IsCompleted, "Right-hand reels are still spinning");
+            pause.Restart();
+            audience.RevealNow();
+            WaitUntil(() => animation.IsCompleted, "Reveal-now stops all remaining reels");
+            animation.GetAwaiter().GetResult();
+            Check(pause.Elapsed.TotalSeconds < 0.5 && audience.DisplayedNumber == "001",
+                "Reveal-now bypasses remaining braking without changing the saved result");
+
+            using var cancellation = new CancellationTokenSource();
+            animation = audience.PlayAsync(round, draw, settings, sound, () => (0, true), cancellation.Token, true);
+            cancellation.Cancel();
+            WaitUntil(() => animation.IsCompleted, "Cancellation stops every reel");
+            Check(animation.IsCanceled && !audience.IsAnimating, "Canceled reels do not continue the draw");
+        }
+        finally { audience.Close(); }
+    }
+
+    private static void CheckStableNumberPresentation()
+    {
+        var audience = new AudienceWindow();
+        using var sound = new DrawSound();
+        try
+        {
+            foreach (var mode in new[] { LotteryMode.Books, LotteryMode.Hearts })
+            {
+                var draw = new DrawRecord { Number = 73, Prize = "Gevinst" };
+                var round = new LotteryRound { Mode = mode, Books = new(), Prizes = [draw.Prize], Draws = [draw] };
+                var animation = audience.PlayAsync(round, draw,
+                    new() { DurationSeconds = 0.5, TickMilliseconds = 30 },
+                    sound, () => (0, true), CancellationToken.None);
+                var panel = Control<StackPanel>(audience, "ReelsPanel");
+                var reels = panel.Children.Cast<DigitReel>().ToArray();
+                var before = AudienceBounds(audience);
+                if (mode == LotteryMode.Hearts) audience.RevealNow();
+                WaitUntil(() => animation.IsCompleted, "Ticket reels settle");
+                animation.GetAwaiter().GetResult();
+                Check(AudienceBounds(audience).SequenceEqual(before), $"{mode} result keeps its layout after stopping");
+                Check(panel.Children.Cast<DigitReel>().SequenceEqual(reels), "Completion does not rebuild the reels");
+                Check(audience.DisplayedNumber == (mode == LotteryMode.Hearts ? "073" : "0073"),
+                    "Leading zeroes remain so the result does not resize");
+                Check(Control<TextBlock>(audience, "BookText").Text == (mode == LotteryMode.Books ? "Bok 2" : ""),
+                    "Only book draws show the book number below the result");
+                draw.RevealedAt = DateTimeOffset.Now;
+                audience.UpdateRound(round);
+                Check(AudienceBounds(audience).SequenceEqual(before) && panel.Children.Cast<DigitReel>().SequenceEqual(reels),
+                    $"Saving and refreshing the revealed {mode} winner preserves the layout");
+                Check(Control<ListBox>(audience, "PublicWinners").Items.Cast<WinnerItem>().Single().NumberText == "73",
+                    "Public winner history contains only the ticket number");
+            }
+        }
+        finally { audience.Close(); }
+    }
+
+    private static Rect[] AudienceBounds(AudienceWindow audience)
+    {
+        var content = (FrameworkElement)audience.Content;
+        content.Measure(new Size(1600, 900));
+        content.Arrange(new Rect(0, 0, 1600, 900));
+        content.UpdateLayout();
+        return new[] { "PrizeView", "StageText", "ReelsPanel", "PublicWinners" }
+            .Select(name => Control<FrameworkElement>(audience, name))
+            .Select(element => element.TransformToAncestor(content).TransformBounds(new Rect(element.RenderSize)))
+            .ToArray();
     }
 
     private static void Check(bool condition, string message)

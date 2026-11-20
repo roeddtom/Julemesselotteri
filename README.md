@@ -9,12 +9,16 @@ Avklarte krav og iterasjonsplan: [MVP](docs/MVP.md).
 Veiledning og arrangementssjekkliste: [Bruk](docs/BRUK.md).
 
 **Status:** MVP med animert vinnervisning i Ungdomssenterets visuelle profil, lokal lyd og
-separate operatør-/publikumsvinduer. Boklotteriet viser bok først, deretter
-loddnummer, med justerbar pause. Hvert lotteri har egen hastighet og varighet;
+separate operatør-/publikumsvinduer. Boklotteriet trekker loddnummeret direkte
+og viser deretter bare boknummeret under resultatet, uten loddintervall.
+Vinnerlistene viser loddnummer og gevinst, ikke boknummer.
+Hvert lotteri har egen hastighet og varighet;
 operatøren kan vise vinneren straks eller avslutte runden.
+Alle sifrene spinner samtidig med litt ulik fart, bremser sammen og stopper fra venstre mot høyre.
 
 Et valgfritt eksempel med virtuell loddbok kan slås på under **Visning og lyd**:
-Etter at både bok og loddnummer er ferdig trukket, kommer forsiden fram,
+Etter at loddnummeret er ferdig trukket, venter appen den innstilte bokpausen.
+Deretter kommer forsiden fram under vinnerlisten uten at talltromlene flyttes,
 boka åpnes og riktig ti-raders side og vinnerrad markeres.
 Hver side har stående A5-proporsjoner, med samme bredde som forsiden.
 Valget er avslått som standard og påvirker ikke hjertelodd.
@@ -37,7 +41,7 @@ dotnet run --project src\Julemesselotteri.App
 
 Skjermtesten åpner midlertidige operatør- og publikumsvinduer og bruker egne
 testdata i en midlertidig mappe, ikke arrangementets data. Den kontrollerer også
-animasjon, hastighet/varighet, bokpause, avbrudd, omstart og generert lyd.
+animasjon, hastighet/varighet, bokpause, avbrudd, omstart og innebygd lyd.
 Appskjermbilder kan lagres med
 `dotnet run --project tests\Julemesselotteri.App.SmokeTests -- artifacts\ui-check`.
 

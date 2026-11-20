@@ -1,0 +1,11 @@
+Slot machine audio (slot-spin.wav and slot-win.wav)
+Source: "Peliautomaatti, Yksikätinen rosvo / Old slot machine" by YleArkisto.
+https://freesound.org/people/YleArkisto/sounds/316887/
+
+Recording: Aristocrat Olympia mechanical slot machine, Linnanmäki,
+Helsinki, Finland, 21 April 1975.
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
+Adapted for Julemesselotteri: excerpts trimmed, converted to mono PCM WAV,
+level adjusted, and crossfaded for the spin loop or faded for the payout.

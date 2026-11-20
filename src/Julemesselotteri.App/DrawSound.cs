@@ -5,34 +5,42 @@ namespace Julemesselotteri.App;
 
 public sealed class DrawSound : IDisposable
 {
+    private const uint AsyncMemory = 0x0001 | 0x0002 | 0x0004;
+    private const uint Loop = 0x0008;
+    private static readonly Lazy<byte[]> SpinWave = new(() => LoadWave("slot-spin"));
+    private static readonly Lazy<byte[]> WinWave = new(() => LoadWave("slot-win"));
     private GCHandle _playing;
-    private readonly Dictionary<(int Volume, bool Win), byte[]> _cache = [];
+    private int _spinVolume;
 
     [DllImport("winmm.dll", EntryPoint = "PlaySoundW")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool PlaySound(nint data, nint module, uint flags);
 
-    public void Tick(int volume, bool muted) => Play(volume, muted, false);
-    public void Win(int volume, bool muted) => Play(volume, muted, true);
-
-    private void Play(int volume, bool muted, bool win)
+    public void Spin(int volume, bool muted)
     {
         if (muted || volume <= 0) { Stop(); return; }
-        volume = Math.Clamp(volume, 0, 100);
-        if (!_cache.TryGetValue((volume, win), out var wave))
-        {
-            wave = CreateWave(volume, win);
-            _cache[(volume, win)] = wave;
-        }
+        if (_spinVolume == volume) return;
+        Play(volume, false);
+        _spinVolume = volume;
+    }
+
+    public void Win(int volume, bool muted)
+    {
+        if (muted || volume <= 0) Stop();
+        else Play(volume, true);
+    }
+
+    private void Play(int volume, bool win)
+    {
         Stop();
-        // PlaySound reads asynchronously: keep the WAV pinned until playback is stopped.
-        _playing = GCHandle.Alloc(wave, GCHandleType.Pinned);
-        if (!PlaySound(_playing.AddrOfPinnedObject(), 0, 0x0001 | 0x0002 | 0x0004))
-            Stop();
+        _playing = GCHandle.Alloc(CreateWave(volume, win), GCHandleType.Pinned);
+        if (!PlaySound(_playing.AddrOfPinnedObject(), 0, AsyncMemory | (win ? 0u : Loop)))
+            _playing.Free();
     }
 
     public void Stop()
     {
+        _spinVolume = 0;
         if (!_playing.IsAllocated) return;
         PlaySound(0, 0, 0);
         _playing.Free();
@@ -40,45 +48,23 @@ public sealed class DrawSound : IDisposable
 
     public static byte[] CreateWave(int volume, bool win)
     {
-        const int rate = 22050;
-        var seconds = win ? 0.95 : 0.035;
-        var samples = (int)(rate * seconds);
-        using var stream = new MemoryStream();
-        using var writer = new BinaryWriter(stream);
-        writer.Write("RIFF"u8);
-        writer.Write(36 + samples * 2);
-        writer.Write("WAVEfmt "u8);
-        writer.Write(16);
-        writer.Write((short)1);
-        writer.Write((short)1);
-        writer.Write(rate);
-        writer.Write(rate * 2);
-        writer.Write((short)2);
-        writer.Write((short)16);
-        writer.Write("data"u8);
-        writer.Write(samples * 2);
-        var amplitude = Math.Clamp(volume, 0, 100) / 100.0 * 0.22 * short.MaxValue;
-        double[] notes = [523.25, 659.25, 783.99, 1046.5];
-        for (var i = 0; i < samples; i++)
+        var wave = (byte[])(win ? WinWave.Value : SpinWave.Value).Clone();
+        var gain = Math.Clamp(volume, 0, 100) / 100.0;
+        // The bundled clips are mono 16-bit PCM WAVs with a canonical 44-byte header.
+        for (var i = 44; i < wave.Length; i += 2)
         {
-            var t = (double)i / rate;
-            double sample;
-            if (win)
-            {
-                sample = 0;
-                for (var note = 0; note < notes.Length; note++)
-                {
-                    var elapsed = t - note * 0.12;
-                    if (elapsed < 0) continue;
-                    sample += Math.Sin(2 * Math.PI * notes[note] * elapsed) *
-                        Math.Min(1, elapsed / 0.008) * Math.Exp(-5 * elapsed) / 2;
-                }
-            }
-            else
-                sample = Math.Sin(2 * Math.PI * (950 - 500 * t / seconds) * t) *
-                    Math.Sin(Math.PI * t / seconds) * Math.Exp(-80 * t);
-            writer.Write((short)Math.Clamp(sample * amplitude, short.MinValue, short.MaxValue));
+            var sample = System.Buffers.Binary.BinaryPrimitives.ReadInt16LittleEndian(wave.AsSpan(i));
+            System.Buffers.Binary.BinaryPrimitives.WriteInt16LittleEndian(wave.AsSpan(i), (short)(sample * gain));
         }
+        return wave;
+    }
+
+    private static byte[] LoadWave(string name)
+    {
+        using var resource = typeof(DrawSound).Assembly.GetManifestResourceStream($"{name}.wav")
+            ?? throw new InvalidOperationException($"Missing bundled audio: {name}.wav");
+        using var stream = new MemoryStream();
+        resource.CopyTo(stream);
         return stream.ToArray();
     }
 
