@@ -39,7 +39,7 @@
                         <ColumnDefinition Width="40"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Path x:Name="HeartFrame" Width="990" Height="670" Stretch="Fill"
+                    <Path x:Name="HeartFrame" Width="970" Height="670" Stretch="Fill"
                           HorizontalAlignment="Center" VerticalAlignment="Top"
                           Fill="{StaticResource Accent}" Stroke="{StaticResource BrandRed}" StrokeThickness="6"
                           Visibility="Collapsed" IsHitTestVisible="False"

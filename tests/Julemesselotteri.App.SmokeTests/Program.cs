@@ -568,8 +568,11 @@ internal static class Program
                 "Heart prize occupies the space above both the heart and winner list");
             Check(prizeArea.Right >= winnersBounds.Right && Math.Abs(heartPrize.Left - prizeArea.Left) < 0.01,
                 "Heart prize is left-aligned in the available header above both columns");
-            Check(Math.Abs(heartBounds.Width - 990) < 0.01 && Math.Abs(heartBounds.Height - 670) < 0.01,
-                "Heart retains the dimensions from the requested earlier design");
+            Check(heartBounds.Width < 990 && Math.Abs(heartBounds.Height - 670) < 0.01,
+                "Heart is narrower without changing its height");
+            var heartReels = Bounds(Control<Viewbox>(audience, "ReelsView"));
+            Check(heartReels.Top - heartBounds.Top > 85,
+                "Heart reels are lower than in the earlier design");
             WaitUntil(() => animation.IsCompleted, "The 1000 draw completes");
             animation.GetAwaiter().GetResult();
             Check(audience.DisplayedNumber == "1000" && panel.Children.Count == 4 &&

@@ -100,7 +100,7 @@ public partial class AudienceWindow : Window
         PrizeArea.Margin = hearts ? new Thickness(320, 0, 0, 0) : new Thickness(0, 120, 0, 0);
         PrizeView.HorizontalAlignment = hearts ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
         PrizeText.TextAlignment = hearts ? TextAlignment.Left : TextAlignment.Center;
-        StageText.Margin = hearts ? new Thickness(0, 35, 0, 20) : new Thickness(0, 142, 0, 20);
+        StageText.Margin = hearts ? new Thickness(0, 45, 0, 20) : new Thickness(0, 142, 0, 20);
         BookText.Visibility = hearts ? Visibility.Collapsed : Visibility.Visible;
         return !hearts && bookAnimationEnabled;
     }
