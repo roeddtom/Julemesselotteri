@@ -39,11 +39,11 @@
                         <ColumnDefinition Width="40"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Path x:Name="HeartFrame" Width="940" Height="670" Stretch="Fill"
+                    <Path x:Name="HeartFrame" Width="990" Height="670" Stretch="Fill"
                           HorizontalAlignment="Center" VerticalAlignment="Top"
                           Fill="{StaticResource Accent}" Stroke="{StaticResource BrandRed}" StrokeThickness="6"
                           Visibility="Collapsed" IsHitTestVisible="False"
-                          Data="M 500,580 C 200,510 40,370 40,150 C 40,-20 340,-40 500,120 C 660,-40 960,-20 960,150 C 960,370 800,510 500,580 Z"/>
+                          Data="M 500,580 C 420,510 40,310 40,150 C 40,-20 340,-40 500,70 C 660,-40 960,-20 960,150 C 960,310 580,510 500,580 Z"/>
                     <StackPanel x:Name="DrawPanel" VerticalAlignment="Top">
                         <TextBlock x:Name="StageText" Text="LODDNUMMER" Foreground="{StaticResource BrandCream}" FontSize="20"
                                    Height="30" TextAlignment="Center" Margin="0,32,0,20"/>

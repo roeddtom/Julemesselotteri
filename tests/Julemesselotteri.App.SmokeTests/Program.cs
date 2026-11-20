@@ -568,11 +568,8 @@ internal static class Program
                 "Heart prize occupies the space above both the heart and winner list");
             Check(prizeArea.Right >= winnersBounds.Right && Math.Abs(heartPrize.Left - prizeArea.Left) < 0.01,
                 "Heart prize is left-aligned in the available header above both columns");
-            var heartReels = Bounds(Control<Viewbox>(audience, "ReelsView"));
-            Check(Math.Abs(heartReels.Top + heartReels.Height / 2 - (heartBounds.Top + heartBounds.Height / 2)) <= 40.01,
-                "Heart reels remain near the center of the heart");
-            Check(heartBounds.Width < 990 && Math.Abs(heartBounds.Height - 670) < 0.01,
-                "Heart is narrower while retaining its previous height");
+            Check(Math.Abs(heartBounds.Width - 990) < 0.01 && Math.Abs(heartBounds.Height - 670) < 0.01,
+                "Heart retains the dimensions from the requested earlier design");
             WaitUntil(() => animation.IsCompleted, "The 1000 draw completes");
             animation.GetAwaiter().GetResult();
             Check(audience.DisplayedNumber == "1000" && panel.Children.Count == 4 &&
@@ -583,6 +580,8 @@ internal static class Program
             var winningSize = ReelSize();
             var heart = Control<System.Windows.Shapes.Path>(audience, "HeartFrame");
             var slots = Control<Viewbox>(audience, "SlotsView");
+            var originalHeart = Geometry.Parse("M 500,580 C 420,510 40,310 40,150 C 40,-20 340,-40 500,70 C 660,-40 960,-20 960,150 C 960,310 580,510 500,580 Z");
+            Check(heart.Data.ToString() == originalHeart.ToString(), "Heart outline matches the requested earlier design");
             Check(heart.Visibility == Visibility.Visible && audience.DisplayedNumber == "1000",
                 "The heart remains around the completed winning number");
             foreach (var corner in new[] { new Point(), new Point(slots.ActualWidth, 0),
