@@ -9,6 +9,7 @@ namespace Julemesselotteri.App;
 public partial class AudienceWindow : Window
 {
     private const int HeartSpinDigits = 3;
+    private bool _heartMode;
     private TaskCompletionSource _revealSignal = new();
     public bool IsAnimating { get; private set; }
     public string DisplayedNumber { get; private set; } = "";
@@ -96,11 +97,12 @@ public partial class AudienceWindow : Window
     private bool SetPresentationMode(LotteryMode mode, bool bookAnimationEnabled)
     {
         var hearts = mode == LotteryMode.Hearts;
+        _heartMode = hearts;
         PrizeArea.Width = hearts ? 1152 : 990;
         PrizeArea.Margin = hearts ? new Thickness(320, 0, 0, 0) : new Thickness(0, 120, 0, 0);
         PrizeView.HorizontalAlignment = hearts ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
         PrizeText.TextAlignment = hearts ? TextAlignment.Left : TextAlignment.Center;
-        StageText.Margin = hearts ? new Thickness(0, 45, 0, 20) : new Thickness(0, 142, 0, 20);
+        StageText.Margin = hearts ? new Thickness(0, 89, 0, 20) : new Thickness(0, 142, 0, 20);
         BookText.Visibility = hearts ? Visibility.Collapsed : Visibility.Visible;
         return !hearts && bookAnimationEnabled;
     }
@@ -202,6 +204,7 @@ public partial class AudienceWindow : Window
 
     private void PrepareReels(int count)
     {
+        ReelsView.MaxWidth = _heartMode && count > HeartSpinDigits ? 650 : 950;
         while (ReelsPanel.Children.Count > count) ReelsPanel.Children.RemoveAt(0);
         while (ReelsPanel.Children.Count < count) ReelsPanel.Children.Insert(0, new DigitReel());
     }

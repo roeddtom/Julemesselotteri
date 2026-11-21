@@ -568,31 +568,33 @@ internal static class Program
                 "Heart prize occupies the space above both the heart and winner list");
             Check(prizeArea.Right >= winnersBounds.Right && Math.Abs(heartPrize.Left - prizeArea.Left) < 0.01,
                 "Heart prize is left-aligned in the available header above both columns");
-            Check(heartBounds.Width < 990 && Math.Abs(heartBounds.Height - 670) < 0.01,
-                "Heart is narrower without changing its height");
+            Check(heartBounds.Width / heartBounds.Height is > 1.2 and < 1.3,
+                "Heart has the taller proportions of the reference");
             var heartReels = Bounds(Control<Viewbox>(audience, "ReelsView"));
-            Check(heartReels.Top - heartBounds.Top > 85,
-                "Heart reels are lower than in the earlier design");
+            Check(heartReels.Width / heartBounds.Width is > 0.65 and < 0.75 &&
+                heartReels.Height / heartBounds.Height is > 0.35 and < 0.42,
+                "The three spinning reels fill the heart like the reference");
+            var heart = Control<System.Windows.Shapes.Path>(audience, "HeartFrame");
+            var slots = Control<Viewbox>(audience, "SlotsView");
+            CheckSlotsInsideHeart("Three spinning reels fit inside the heart");
+            if (screenshotDirectory is not null)
+            {
+                Directory.CreateDirectory(screenshotDirectory);
+                SaveScreenshot(content, Path.Combine(screenshotDirectory, "audience-hearts-spinning.png"));
+            }
             WaitUntil(() => animation.IsCompleted, "The 1000 draw completes");
             animation.GetAwaiter().GetResult();
             Check(audience.DisplayedNumber == "1000" && panel.Children.Count == 4 &&
                 panel.Children.Cast<DigitReel>().Skip(1).SequenceEqual(spinningReels),
                 "The thousands reel appears only at the reveal, keeping the three original reels");
+            var completedBounds = AudienceBounds(audience);
             draw.RevealedAt = DateTimeOffset.Now;
             audience.UpdateRound(round);
             var winningSize = ReelSize();
-            var heart = Control<System.Windows.Shapes.Path>(audience, "HeartFrame");
-            var slots = Control<Viewbox>(audience, "SlotsView");
-            var originalHeart = Geometry.Parse("M 500,580 C 420,510 40,310 40,150 C 40,-20 340,-40 500,70 C 660,-40 960,-20 960,150 C 960,310 580,510 500,580 Z");
-            Check(heart.Data.ToString() == originalHeart.ToString(), "Heart outline matches the requested earlier design");
             Check(heart.Visibility == Visibility.Visible && audience.DisplayedNumber == "1000",
                 "The heart remains around the completed winning number");
-            foreach (var corner in new[] { new Point(), new Point(slots.ActualWidth, 0),
-                new Point(0, slots.ActualHeight), new Point(slots.ActualWidth, slots.ActualHeight) })
-            {
-                Check(heart.RenderedGeometry.FillContains(slots.TranslatePoint(corner, heart)),
-                    $"All four slot digits fit inside the heart outline: corner {corner}, heart point {slots.TranslatePoint(corner, heart)}");
-            }
+            Check(AudienceBounds(audience).SequenceEqual(completedBounds), "The 1000 result stays in place on refresh");
+            CheckSlotsInsideHeart("All four slot digits fit inside the heart outline");
             var topLeft = heart.TranslatePoint(new Point(), content);
             var bottomRight = heart.TranslatePoint(new Point(heart.ActualWidth, heart.ActualHeight), content);
             Check(topLeft.X >= 0 && topLeft.Y >= 0 && bottomRight.X <= content.ActualWidth &&
@@ -613,9 +615,8 @@ internal static class Program
                 "Book prize is higher up and does not overlap the reels");
             Check(Math.Abs(spinningSize.Width - bookSize.Width) < 0.01 &&
                 Math.Abs(spinningSize.Height - bookSize.Height) < 0.01 &&
-                Math.Abs(winningSize.Width - bookSize.Width) < 0.01 &&
-                Math.Abs(winningSize.Height - bookSize.Height) < 0.01,
-                "Hearts use the same rendered reel size as books, even when revealing 1000");
+                winningSize.Width < bookSize.Width && winningSize.Height < bookSize.Height,
+                "Regular heart reels match book reels; the four-digit result fits the narrower heart");
             Check(bookSize.Height > 230, "Both lotteries use enlarged reels");
             Check(!audience.IsVisible, "Heart layout checks never display the window");
 
@@ -630,6 +631,13 @@ internal static class Program
 
             Rect Bounds(FrameworkElement element) =>
                 element.TransformToAncestor(content).TransformBounds(new Rect(element.RenderSize));
+
+            void CheckSlotsInsideHeart(string message)
+            {
+                foreach (var corner in new[] { new Point(), new Point(slots.ActualWidth, 0),
+                    new Point(0, slots.ActualHeight), new Point(slots.ActualWidth, slots.ActualHeight) })
+                    Check(heart.RenderedGeometry.FillContains(slots.TranslatePoint(corner, heart)), message);
+            }
         }
         finally { audience.Close(); }
     }

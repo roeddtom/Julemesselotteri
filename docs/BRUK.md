@@ -146,7 +146,8 @@ Under **Visning og lyd** har hvert lotteri egne innstillinger:
   tallene ikke hopper eller endrer størrelse. Ledende nuller beholdes, for
   eksempel **073** for hjertelodd 73 og **0073** for boklodd 73; vinnerlistene
   bruker **73**. Tre tromler spinner for hjertelodd. En fjerde vises bare hvis
-  **1000** trekkes.
+  **1000** trekkes. Da skaleres de fire tromlene ned slik at hele tallet får
+  plass i hjertet.
 - Bokpause: 0–30 sekunder mellom ferdig loddnummer og den valgfrie bokanimasjonen.
   Pausen brukes ikke når bokanimasjonen er avslått.
 - Volum: 0–100. Hvert siffer som passerer på hver trommel gir et kort klikk,
