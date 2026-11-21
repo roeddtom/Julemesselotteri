@@ -57,9 +57,13 @@ eller som tomme tromler før første trekning.
    animasjonen er ferdig; **Vis nå** hopper direkte til resultatet.
 3. Samme nummer kan ikke trekkes igjen innen runden. Ulike nummer på samme
    fysiske hjerte kan vinne; appen har ikke en kartlegging fra nummer til hjerter.
-4. Siste vinner blir stående. Velg **Avslutt runde** når dere er klare.
+4. Etter siste oppsatte gevinst kan dere velge **Trekk ekstrapremie**. Premiene
+   heter **EKSTRAPREMIE 1**, **EKSTRAPREMIE 2** osv., og bruker nummer som ikke
+   allerede er trukket i runden. Fortsett til dere er klare eller alle 1000
+   nummer er brukt.
+5. Siste vinner blir stående. Velg **Avslutt runde** når dere er klare.
    Publikumsvinduet lukkes, og PowerPoint kan vises igjen.
-5. Neste hjerterunde bruker samme gevinster, men alle nummer 1–1000 er ledige igjen.
+6. Neste hjerterunde bruker samme gevinster, men alle nummer 1–1000 er ledige igjen.
 
 En uferdig runde kan avsluttes tidlig, med bekreftelse. Et allerede valgt nummer
 beholdes som vinner selv om animasjonen ikke ble fullført.

@@ -83,7 +83,7 @@
                                     <DataTemplate>
                                         <Border BorderBrush="{StaticResource BrandBorder}" BorderThickness="0,0,0,1" Padding="0,14">
                                             <StackPanel>
-                                                <TextBlock Text="{Binding NumberText}" FontSize="30"
+                                                <TextBlock Text="{Binding NumberText}" FontSize="42"
                                                            FontWeight="SemiBold" Foreground="{StaticResource BrandDark}"/>
                                                 <TextBlock Text="{Binding Prize}" FontSize="22" Margin="0,5,0,0"/>
                                             </StackPanel>

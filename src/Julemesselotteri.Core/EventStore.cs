@@ -55,8 +55,14 @@ public sealed class EventFileStore(string dataDirectory, string logDirectory) : 
         {
             if (!Enum.IsDefined(round.Mode) || round.Id == Guid.Empty ||
                 round.Prizes is null || round.Prizes.Count == 0 || round.Prizes.Any(string.IsNullOrWhiteSpace) ||
-                round.Draws is null || round.Draws.Count > round.Prizes.Count)
+                round.Draws is null || round.Draws.Count > round.Prizes.Count ||
+                round.ExtraPrizeCount < 0 || round.ExtraPrizeCount >= round.Prizes.Count ||
+                (round.ExtraPrizeCount > 0 && (round.Mode != LotteryMode.Hearts ||
+                    round.Draws.Count != round.Prizes.Count)))
                 throw new InvalidDataException("Ugyldige rundedata.");
+            for (var i = 0; i < round.ExtraPrizeCount; i++)
+                if (round.Prizes[round.Prizes.Count - round.ExtraPrizeCount + i] != $"EKSTRAPREMIE {i + 1}")
+                    throw new InvalidDataException("Ugyldige ekstragevinster.");
             var eligible = round.Mode == LotteryMode.Books
                 ? TicketRules.EligibleBooks(round.Books, []).ToHashSet()
                 : Enumerable.Range(1, 1000).ToHashSet();

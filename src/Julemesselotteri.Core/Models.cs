@@ -49,6 +49,8 @@ public sealed class LotteryRound
     public DateTimeOffset StartedAt { get; init; } = DateTimeOffset.Now;
     public DateTimeOffset? EndedAt { get; set; }
     public List<DrawRecord> Draws { get; init; } = [];
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public int ExtraPrizeCount { get; set; }
     public DrawRecord? PendingDraw => Draws.LastOrDefault(d => d.RevealedAt is null);
 }
 

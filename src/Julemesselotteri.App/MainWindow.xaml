@@ -147,7 +147,7 @@
                             <DataTemplate>
                                 <Border BorderBrush="{StaticResource BrandBorder}" BorderThickness="0,0,0,1" Padding="4,10">
                                     <StackPanel>
-                                        <TextBlock Text="{Binding NumberText}" FontWeight="Bold" FontSize="19"/>
+                                        <TextBlock Text="{Binding NumberText}" FontWeight="Bold" FontSize="27"/>
                                         <TextBlock Text="{Binding Prize}" Foreground="{StaticResource MutedInk}"/>
                                     </StackPanel>
                                 </Border>

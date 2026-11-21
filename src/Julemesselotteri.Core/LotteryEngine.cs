@@ -60,7 +60,8 @@ public sealed class LotteryEngine
         var round = _state.ActiveRound ?? throw new InvalidOperationException("Start en runde først.");
         if (round.PendingDraw is not null)
             return EventFileStore.Copy(_state).ActiveRound!.PendingDraw!;
-        if (round.Draws.Count == round.Prizes.Count)
+        var extra = round.Draws.Count == round.Prizes.Count;
+        if (extra && round.Mode != LotteryMode.Hearts)
             throw new InvalidOperationException("Alle gevinstene er trukket. Avslutt runden.");
         var eligible = Eligible(_state, round.Mode, round.Books);
         if (eligible.Length == 0)
@@ -68,9 +69,18 @@ public sealed class LotteryEngine
         var draw = new DrawRecord
         {
             Number = eligible[_randomIndex(eligible.Length)],
-            Prize = round.Prizes[round.Draws.Count]
+            Prize = extra ? $"EKSTRAPREMIE {round.ExtraPrizeCount + 1}" : round.Prizes[round.Draws.Count]
         };
-        Change(state => state.ActiveRound!.Draws.Add(draw));
+        Change(state =>
+        {
+            var active = state.ActiveRound!;
+            if (extra)
+            {
+                active.Prizes.Add(draw.Prize);
+                active.ExtraPrizeCount++;
+            }
+            active.Draws.Add(draw);
+        });
         return State.ActiveRound!.Draws.Last();
     }
 

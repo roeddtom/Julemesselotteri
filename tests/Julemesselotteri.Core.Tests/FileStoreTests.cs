@@ -63,6 +63,30 @@ public sealed class FileStoreTests : IDisposable
         Assert.Equal(draw.Id, new LotteryEngine(Store).State.ActiveRound!.PendingDraw!.Id);
     }
 
+    [Fact]
+    public void ExtraPrizeSurvivesFileRestartWithoutRerollAndContinuesNumbering()
+    {
+        var engine = new LotteryEngine(Store, _ => 0);
+        engine.SaveSettings(new AppSettings { HeartPrizes = "Premie" });
+        engine.StartRound(LotteryMode.Hearts);
+        engine.SelectWinner();
+        engine.RevealWinner();
+        Assert.DoesNotContain("ExtraPrizeCount", File.ReadAllText(Store.StatePath));
+        engine = new LotteryEngine(Store, _ => 0);
+        var extra = engine.SelectWinner();
+
+        var restored = new LotteryEngine(Store, _ => throw new Exception("Must not choose again"));
+        Assert.Equal(extra.Id, restored.SelectWinner().Id);
+        Assert.Equal("EKSTRAPREMIE 1", restored.State.ActiveRound!.PendingDraw!.Prize);
+        restored.RevealWinner();
+        restored = new LotteryEngine(Store, _ => 0);
+        var second = restored.SelectWinner();
+        Assert.Equal(("EKSTRAPREMIE 2", 3), (second.Prize, second.Number));
+        Store.WriteLogs(restored.State);
+        var log = File.ReadAllText(Assert.Single(Directory.GetFiles(Store.LogDirectory, "*.txt")));
+        Assert.Contains("Gevinst: EKSTRAPREMIE 2", log);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_directory))

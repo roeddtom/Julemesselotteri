@@ -104,6 +104,16 @@ internal static class Program
             Check(naturalDraw.Elapsed.TotalSeconds >= 2.2, "Heart duration includes the three-reel braking phase");
             Check(engine.State.ActiveRound!.Draws[1].Number == 2, "Unique heart numbers");
             Check(audience.DisplayedNumber == "002", "Final result stays visible without removing reels");
+            Check(Control<Button>(window, "DrawButton").IsEnabled &&
+                Control<Button>(window, "DrawButton").Content.ToString() == "Trekk ekstrapremie",
+                "Completed heart round offers an extra prize");
+            DrawAndWait(window, engine);
+            Check(engine.State.ActiveRound!.Draws.Last().Prize == "EKSTRAPREMIE 1" &&
+                engine.State.ActiveRound.Draws.Last().Number == 3, "Extra prize uses a fresh heart number");
+            Check(Control<Button>(window, "DrawButton").Content.ToString() == "Trekk ekstrapremie",
+                "Additional extra prizes remain available");
+            Check(Descendants(Control<ListView>(window, "WinnersList")).OfType<TextBlock>()
+                .Any(text => text.Text == "3" && text.FontSize == 27), "Operator winning numbers use enlarged text");
             var completedRound = engine.State.ActiveRound.Id;
             Click(window, "StartHeartsButton");
             Check(engine.State.ActiveRound!.Id != completedRound, "New heart round replaces completed round without a prompt");
@@ -149,6 +159,7 @@ internal static class Program
             WaitUntil(() => virtualBook.Page == 1, "Cover opens to the first table page");
             Check(virtualBook.HighlightedNumber is null, "Pages turn before highlighting the winning row");
             WaitUntil(() => engine.State.ActiveRound!.PendingDraw is null, "Book draw finishes");
+            Check(!Control<Button>(window, "DrawButton").IsEnabled, "Completed book round does not offer extra draws");
             Check(bookDraw.Elapsed.TotalSeconds >= 6.4, "Draw includes staggered digit stops, booklet pause and slower pages");
             Check(audience.DisplayedNumber == "0073", "Global ticket shown with stable reel count, not local row");
             Check(Control<TextBlock>(window, "CurrentBook").Text == "Bok 2", "Book displayed with global ticket");
@@ -220,6 +231,7 @@ internal static class Program
             Pump();
             Check(store.Load()!.ActiveRound!.PendingDraw!.Id == interrupted, "Closing operator preserves interrupted selection");
             Check(new LotteryEngine(store).SelectWinner().Id == interrupted, "Restart after operator close does not reroll");
+            CheckExtraPrizeExhaustion(Path.Combine(root, "exhaustion"));
             CheckAnimationSpeed();
             CheckStableNumberPresentation();
             CheckBookTicketAnimation();
@@ -778,6 +790,8 @@ internal static class Program
                 scroller.ComputedHorizontalScrollBarVisibility == Visibility.Collapsed,
                 "Public winner list hides scrollbars even when the list overflows");
             Check(scroller.ScrollableHeight > 0, "Hidden scrollbar preserves programmatic scrolling");
+            Check(Descendants(winners).OfType<TextBlock>().Any(text => text.Text == "30" && text.FontSize == 42),
+                "Public winning numbers use enlarged text");
             scroller.ScrollToBottom();
             content.UpdateLayout();
             Check(scroller.VerticalOffset > 0, "Overflowing winner history can scroll without a visible scrollbar");
@@ -798,15 +812,55 @@ internal static class Program
         }
         finally { audience.Close(); }
 
-        static IEnumerable<DependencyObject> Descendants(DependencyObject parent)
+    }
+
+    private static IEnumerable<DependencyObject> Descendants(DependencyObject parent)
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
         {
-            for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
-            {
-                var child = VisualTreeHelper.GetChild(parent, index);
-                yield return child;
-                foreach (var descendant in Descendants(child)) yield return descendant;
-            }
+            var child = VisualTreeHelper.GetChild(parent, index);
+            yield return child;
+            foreach (var descendant in Descendants(child)) yield return descendant;
         }
+    }
+
+    private static void CheckExtraPrizeExhaustion(string directory)
+    {
+        var store = new EventFileStore(directory, Path.Combine(directory, "logs"));
+        var state = EventState.Create(new AppSettings { HeartPrizes = "Premie", Muted = true });
+        state.Rounds.Add(new LotteryRound
+        {
+            Mode = LotteryMode.Hearts,
+            Books = new(),
+            Prizes = Enumerable.Repeat("Premie", 999).ToList(),
+            Draws = Enumerable.Range(1, 999).Select(number => new DrawRecord
+            {
+                Number = number,
+                Prize = "Premie",
+                RevealedAt = DateTimeOffset.Now
+            }).ToList()
+        });
+        store.Save(state);
+        var engine = new LotteryEngine(store, _ => 0);
+        var pending = engine.SelectWinner();
+        Check(pending.Number == 1000 && pending.Prize == "EKSTRAPREMIE 1", "Last available number is drawn as an extra");
+        var window = new MainWindow(new LotteryEngine(store, _ => throw new Exception("Must not reroll")), store);
+        try
+        {
+            window.Show();
+            Pump();
+            Check(Control<Button>(window, "DrawButton").IsEnabled &&
+                Control<Button>(window, "DrawButton").Content.ToString() == "Fortsett trekning",
+                "Pending last number remains recoverable when the pool is exhausted");
+            Click(window, "DrawButton");
+            Click(window, "RevealButton");
+            WaitUntil(() => store.Load()!.ActiveRound!.PendingDraw is null, "Last extra prize is revealed");
+            Check(!Control<Button>(window, "DrawButton").IsEnabled &&
+                Control<Button>(window, "DrawButton").Content.ToString() == "Ingen ledige nummer",
+                "Extra draw is disabled when all heart numbers are used");
+            Check(store.Load()!.ActiveRound!.Draws.Last().Id == pending.Id, "Last number is recovered without rerolling");
+        }
+        finally { window.Close(); }
     }
 
     private static void CheckBookTicketAnimation()

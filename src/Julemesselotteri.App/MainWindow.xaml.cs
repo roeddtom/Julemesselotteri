@@ -305,8 +305,12 @@ public partial class MainWindow : Window
         StartBooksButton.IsEnabled = !_drawing && round is null;
         NewEventButton.IsEnabled = !_drawing && round is null;
         EndRoundButton.IsEnabled = round is not null;
-        DrawButton.IsEnabled = !_drawing && round is not null && (round.PendingDraw is not null || round.Draws.Count < round.Prizes.Count);
-        DrawButton.Content = _drawing ? "Trekker …" : round?.PendingDraw is not null ? "Fortsett trekning" : "Trekk neste gevinst";
+        var extra = round is { Mode: LotteryMode.Hearts } && round.Draws.Count == round.Prizes.Count;
+        DrawButton.IsEnabled = !_drawing && round is not null && (round.PendingDraw is not null ||
+            round.Draws.Count < round.Prizes.Count || (extra && round.Draws.Count < 1000));
+        DrawButton.Content = _drawing ? "Trekker …" : round?.PendingDraw is not null ? "Fortsett trekning"
+            : extra ? round!.Draws.Count < 1000 ? "Trekk ekstrapremie" : "Ingen ledige nummer"
+            : "Trekk neste gevinst";
         RevealButton.IsEnabled = round?.PendingDraw is not null;
         ShowAudienceButton.IsEnabled = round is not null;
         RoundTitle.Text = round is null ? "Klar for trekning" : round.Mode == LotteryMode.Hearts ? "Hjertelodd" : "Boklodd";

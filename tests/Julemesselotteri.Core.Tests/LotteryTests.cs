@@ -87,7 +87,10 @@ public sealed class LotteryTests(ITestOutputHelper output)
         engine.RevealWinner();
         Assert.Equal(2, engine.SelectWinner().Number);
         engine.RevealWinner();
-        Assert.Throws<InvalidOperationException>(() => engine.SelectWinner());
+        var extra = engine.SelectWinner();
+        Assert.Equal("EKSTRAPREMIE 1", extra.Prize);
+        Assert.Equal(3, extra.Number);
+        engine.RevealWinner();
         engine.EndRound();
         engine.StartRound(LotteryMode.Hearts);
         Assert.Equal(1, engine.SelectWinner().Number);
